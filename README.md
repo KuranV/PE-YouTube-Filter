@@ -18,6 +18,7 @@ Click the extension icon to switch between three modes:
 
 In this state its waiting to be approved by mozilla to be added into https://addons.mozilla.org/en-US/firefox/.
 
+For now:
 1. Go to `about:debugging` in Firefox
 2. Click *This Firefox* → *Load Temporary Add-on*
 3. Select the `manifest.json` file from this folder
