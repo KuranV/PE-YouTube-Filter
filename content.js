@@ -96,13 +96,23 @@
       }
     }
 
-    // For yt-lockup-view-model (new sidebar format on watch page), the channel
-    // name is in the aria-label of the avatar button: "Go to channel <Name>".
+    // For yt-lockup-view-model (new sidebar/playlist format):
+    // - Video cards: channel name is in aria-label="Go to channel <Name>" on the avatar.
+    // - Playlist cards: channel name is the text of an <a href="/@handle"> link.
     if (card.tagName && card.tagName.toLowerCase() === 'yt-lockup-view-model') {
       const avatarEl = card.querySelector('[aria-label^="Go to channel "]');
       if (avatarEl) {
         const label = avatarEl.getAttribute('aria-label');
         const name = label.replace(/^Go to channel\s+/, '').trim();
+        if (name && !seenNames.has(name.toLowerCase())) {
+          seenNames.add(name.toLowerCase());
+          results.push({ channelId: null, channelName: name });
+        }
+      }
+      // Playlist cards expose the channel via a handle link whose text is the name.
+      const handleLinks = card.querySelectorAll('a[href^="/@"]');
+      for (const a of handleLinks) {
+        const name = a.textContent.trim();
         if (name && !seenNames.has(name.toLowerCase())) {
           seenNames.add(name.toLowerCase());
           results.push({ channelId: null, channelName: name });
