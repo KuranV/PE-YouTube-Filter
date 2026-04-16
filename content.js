@@ -24,6 +24,7 @@
     mode: 'hide',
     byId: new Map(),
     byNameLower: new Map(),
+    byHandle: new Map(),        // handle (lowercase, no @) → entry
     filteredOnPage: 0,
     lastBadgeChannels: new Set(),
     whitelist: new Set(),       // channelId or channelName.toLowerCase()
@@ -41,10 +42,12 @@
   function loadChannelList(list) {
     state.byId.clear();
     state.byNameLower.clear();
+    state.byHandle.clear();
     const channels = Array.isArray(list) ? list : (list && list.channels) || [];
     for (const entry of channels) {
       if (entry.channelId) state.byId.set(entry.channelId, entry);
       if (entry.channelName) state.byNameLower.set(entry.channelName.toLowerCase(), entry);
+      if (entry.handle) state.byHandle.set(entry.handle.toLowerCase().replace(/^@/, ''), entry);
     }
   }
 
@@ -54,10 +57,22 @@
     return m ? m[1] : null;
   }
 
+  function extractHandleFromHref(href) {
+    if (!href) return null;
+    const m = href.match(/^\/@([\w.-]+)/);
+    return m ? m[1].toLowerCase() : null;
+  }
+
+  function extractHandleFromUrl() {
+    const m = location.pathname.match(/^\/@([\w.-]+)/);
+    return m ? m[1].toLowerCase() : null;
+  }
+
   function readCardChannels(card) {
     const results = [];
     const seenIds = new Set();
     const seenNames = new Set();
+    const seenHandles = new Set();
 
     const anchors = card.querySelectorAll('a[href*="/channel/"]');
     for (const a of anchors) {
@@ -112,15 +127,26 @@
       }
     }
 
+    // Extract handles from all @-style links on the card
+    for (const a of card.querySelectorAll('a[href^="/@"]')) {
+      const handle = extractHandleFromHref(a.getAttribute('href'));
+      if (handle && !seenHandles.has(handle)) {
+        seenHandles.add(handle);
+        results.push({ channelId: null, channelName: null, handle });
+      }
+    }
+
     return results;
   }
 
-  function findMatch(channelId, channelName) {
+  function findMatch(channelId, channelName, handle) {
     // Skip whitelisted channels
     if (channelId && state.whitelist.has(channelId)) return null;
     if (channelName && state.whitelist.has(channelName.toLowerCase())) return null;
+    if (handle && state.whitelist.has(handle)) return null;
 
     if (channelId && state.byId.has(channelId)) return state.byId.get(channelId);
+    if (handle && state.byHandle.has(handle)) return state.byHandle.get(handle);
     if (channelName) {
       const entry = state.byNameLower.get(channelName.toLowerCase());
       if (entry) return entry;
@@ -132,7 +158,7 @@
     const refs = readCardChannels(card);
     if (refs.length === 0) return { ready: false, entry: null };
     for (const ref of refs) {
-      const entry = findMatch(ref.channelId, ref.channelName);
+      const entry = findMatch(ref.channelId, ref.channelName, ref.handle || null);
       if (entry) return { ready: true, entry };
     }
     return { ready: true, entry: null };
@@ -357,7 +383,22 @@
       return;
     }
 
-    // Slow path: @handle or /c/ URL — wait for the DOM to render the channel name
+    // Fast path: @handle URL — look up directly by handle
+    const pageHandle = extractHandleFromUrl();
+    if (pageHandle) {
+      const entry = findMatch(null, null, pageHandle);
+      if (entry) {
+        const channelKey = pageHandle;
+        if (state.mode === 'hide') showChannelPageOverlay(entry, channelKey);
+        else showChannelPageBanner(entry, channelKey);
+        return;
+      }
+      // Handle found but not in list — no need to check DOM name
+      removeChannelPageUI();
+      return;
+    }
+
+    // Slow path: /c/ or /user/ URL — wait for the DOM to render the channel name
     for (const delay of [300, 800, 1500]) {
       await new Promise(r => setTimeout(r, delay));
       const name = extractPageChannelName();

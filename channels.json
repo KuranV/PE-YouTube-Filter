@@ -1,10 +1,11 @@
 {
-  "version": 2,
+  "version": 3,
   "updated": "2026-04-16",
   "channels": [
     {
       "channelName": "Veritasium",
       "channelId": "UCHnyfMqiRRG1u-2MsSQLbXA",
+      "handle": "veritasium",
       "owner": "Electrify Video Partners",
       "ownershipType": "majority",
       "reportCount": 0,
@@ -14,6 +15,7 @@
     {
       "channelName": "Veritasium en español",
       "channelId": "UCXtxgWwk55kVJo9lCCZRdmg",
+      "handle": "veritasiumes",
       "owner": "Electrify Video Partners",
       "ownershipType": "majority",
       "reportCount": 0,
@@ -23,6 +25,7 @@
     {
       "channelName": "Fireship",
       "channelId": "UCsBjURrPoezykLs9EqgamOA",
+      "handle": "Fireship",
       "owner": "Electrify Video Partners",
       "ownershipType": "minority",
       "reportCount": 0,
@@ -32,6 +35,7 @@
     {
       "channelName": "Simple History",
       "channelId": "UC510QYlOlKNyhy_zdQxnGYw",
+      "handle": "SimpleHistory_",
       "owner": "Electrify Video Partners",
       "ownershipType": "minority",
       "reportCount": 0,
@@ -41,6 +45,7 @@
     {
       "channelName": "Improvement Pill",
       "channelId": "UCBIt1VN5j37PVM8LLSuTTlw",
+      "handle": "ImprovementPill",
       "owner": "Electrify Video Partners",
       "ownershipType": "minority",
       "reportCount": 0,
@@ -50,6 +55,7 @@
     {
       "channelName": "fern",
       "channelId": "UCyHDQ5C6z1NDmJ4g6SerW8g",
+      "handle": "fernby",
       "owner": "Electrify Video Partners",
       "ownershipType": "minority",
       "reportCount": 0,
@@ -59,6 +65,7 @@
     {
       "channelName": "Astrum",
       "channelId": "UCVRQ_VIgdE8eDAfrd4EgP-w",
+      "handle": "astrumspace",
       "owner": "Electrify Video Partners",
       "ownershipType": "minority",
       "reportCount": 0,
@@ -68,6 +75,7 @@
     {
       "channelName": "Mentour Pilot",
       "channelId": "UCwpHKudUkP5tNgmMdexB3ow",
+      "handle": "mentourpilot",
       "owner": "Electrify Video Partners",
       "ownershipType": "minority",
       "reportCount": 0,
@@ -76,7 +84,8 @@
     },
     {
       "channelName": "Mentour Now",
-      "channelId": "",
+      "channelId": "UCTbcSRduRJJTMaQhUVqywRw",
+      "handle": "MentourNow",
       "owner": "Electrify Video Partners",
       "ownershipType": "minority",
       "reportCount": 0,
@@ -86,6 +95,7 @@
     {
       "channelName": "SpitBrix",
       "channelId": "",
+      "handle": "SpitBrix",
       "owner": "Electrify Video Partners",
       "ownershipType": "minority",
       "reportCount": 0,
@@ -95,6 +105,7 @@
     {
       "channelName": "Simplicissimus",
       "channelId": "UCoTzlJ27FbJbYtzkn_cVp9A",
+      "handle": "Simplicissimus",
       "owner": "Electrify Video Partners",
       "ownershipType": "minority",
       "reportCount": 0,
@@ -104,6 +115,7 @@
     {
       "channelName": "Unfassbar",
       "channelId": "",
+      "handle": "unfassbar",
       "owner": "Electrify Video Partners",
       "ownershipType": "minority",
       "reportCount": 0,
@@ -113,6 +125,7 @@
     {
       "channelName": "The Game Theorists",
       "channelId": "UCo_IB5145EVNcf8hw1Kku7w",
+      "handle": "GameTheory",
       "owner": "Lunar X",
       "ownershipType": "full",
       "reportCount": 0,
@@ -122,6 +135,7 @@
     {
       "channelName": "The Film Theorists",
       "channelId": "UC3sznuotAs2ohg_U__Jzj_Q",
+      "handle": "FilmTheory",
       "owner": "Lunar X",
       "ownershipType": "full",
       "reportCount": 0,
@@ -131,6 +145,7 @@
     {
       "channelName": "The Food Theorists",
       "channelId": "UCHdMK5Ef2El9KZBm9yMm1NA",
+      "handle": "FoodTheory",
       "owner": "Lunar X",
       "ownershipType": "full",
       "reportCount": 0,
@@ -140,6 +155,7 @@
     {
       "channelName": "The Style Theorists",
       "channelId": "UCGvn5DBP4uT0aul1y6nf5og",
+      "handle": "StyleTheorists",
       "owner": "Lunar X",
       "ownershipType": "full",
       "reportCount": 0,
@@ -149,6 +165,7 @@
     {
       "channelName": "GTLive",
       "channelId": "UC5fdssPqmmGhkhsJi4VcckA",
+      "handle": "GTLive",
       "owner": "Lunar X",
       "ownershipType": "full",
       "reportCount": 0,
@@ -158,6 +175,7 @@
     {
       "channelName": "Economics Explained",
       "channelId": "UCZ4AMrDcNrfy3X6nsU8-rPg",
+      "handle": "EconomicsExplained",
       "owner": "Lunar X",
       "ownershipType": "full",
       "reportCount": 0,
@@ -167,6 +185,7 @@
     {
       "channelName": "Gigglebellies",
       "channelId": "",
+      "handle": "Gigglebellies",
       "owner": "Lunar X",
       "ownershipType": "minority",
       "reportCount": 0,
@@ -176,6 +195,7 @@
     {
       "channelName": "Groovy The Martian",
       "channelId": "",
+      "handle": "GroovyTheMartian",
       "owner": "Lunar X",
       "ownershipType": "minority",
       "reportCount": 0,
@@ -185,6 +205,7 @@
     {
       "channelName": "SuperZoo",
       "channelId": "",
+      "handle": "SuperZooOfficial",
       "owner": "Lunar X",
       "ownershipType": "minority",
       "reportCount": 0,
@@ -194,6 +215,7 @@
     {
       "channelName": "Cocomelon - Nursery Rhymes",
       "channelId": "UCbCmjCuTUZos6Inko4u57UQ",
+      "handle": "Cocomelon",
       "owner": "Moonbug Entertainment (Candle Media / Blackstone)",
       "ownershipType": "full",
       "reportCount": 0,
@@ -202,7 +224,8 @@
     },
     {
       "channelName": "Blippi - Educational Videos for Kids",
-      "channelId": "",
+      "channelId": "UC5PYHgAzJ1wLEidB58SK6Xw",
+      "handle": "Blippi",
       "owner": "Moonbug Entertainment (Candle Media / Blackstone)",
       "ownershipType": "full",
       "reportCount": 0,
@@ -211,7 +234,8 @@
     },
     {
       "channelName": "Little Baby Bum - Nursery Rhymes & Kids Songs",
-      "channelId": "",
+      "channelId": "UCKAqou7V9FAWXpZd9xtOg3Q",
+      "handle": "LittleBabyBum",
       "owner": "Moonbug Entertainment (Candle Media / Blackstone)",
       "ownershipType": "full",
       "reportCount": 0,
@@ -220,7 +244,8 @@
     },
     {
       "channelName": "Little Angel: Kids Song And Nursery Rhymes",
-      "channelId": "",
+      "channelId": "UCNzsYU0aWwjERj-9Y9HUEng",
+      "handle": "LittleAngelKids",
       "owner": "Moonbug Entertainment (Candle Media / Blackstone)",
       "ownershipType": "full",
       "reportCount": 0,
@@ -229,7 +254,8 @@
     },
     {
       "channelName": "Gecko's Garage - Trucks For Children",
-      "channelId": "",
+      "channelId": "UChULBXQf9VDYAi3vRLu_U-w",
+      "handle": "GeckosGarage",
       "owner": "Moonbug Entertainment (Candle Media / Blackstone)",
       "ownershipType": "full",
       "reportCount": 0,
@@ -239,6 +265,7 @@
     {
       "channelName": "Oddbods",
       "channelId": "",
+      "handle": "Oddbods",
       "owner": "Moonbug Entertainment (Candle Media / Blackstone)",
       "ownershipType": "full",
       "reportCount": 0,
@@ -248,6 +275,7 @@
     {
       "channelName": "Donut Media",
       "channelId": "UCL4m2wKAnf0qgl8_8RxVsJg",
+      "handle": "donut_media",
       "owner": "Recurrent Ventures (backed by Blackstone)",
       "ownershipType": "full",
       "reportCount": 0,
@@ -257,6 +285,7 @@
     {
       "channelName": "The Drive",
       "channelId": "",
+      "handle": "TheDrive",
       "owner": "Recurrent Ventures (backed by Blackstone)",
       "ownershipType": "full",
       "reportCount": 0,
@@ -266,6 +295,7 @@
     {
       "channelName": "Task & Purpose",
       "channelId": "",
+      "handle": "taskandpurpose",
       "owner": "Recurrent Ventures (backed by Blackstone)",
       "ownershipType": "full",
       "reportCount": 0,
@@ -275,6 +305,7 @@
     {
       "channelName": "Real Stories",
       "channelId": "",
+      "handle": "RealStories",
       "owner": "Little Dot Studios (All3Media / RedBird IMI)",
       "ownershipType": "full",
       "reportCount": 0,
@@ -284,6 +315,7 @@
     {
       "channelName": "Real Crime",
       "channelId": "",
+      "handle": "RealCrime",
       "owner": "Little Dot Studios (All3Media / RedBird IMI)",
       "ownershipType": "full",
       "reportCount": 0,
@@ -293,6 +325,7 @@
     {
       "channelName": "Real Wild",
       "channelId": "",
+      "handle": "RealWild",
       "owner": "Little Dot Studios (All3Media / RedBird IMI)",
       "ownershipType": "full",
       "reportCount": 0,
@@ -302,6 +335,7 @@
     {
       "channelName": "History Hit",
       "channelId": "",
+      "handle": "HistoryHit",
       "owner": "Little Dot Studios (All3Media / RedBird IMI)",
       "ownershipType": "full",
       "reportCount": 0,
@@ -311,6 +345,7 @@
     {
       "channelName": "Wonder",
       "channelId": "",
+      "handle": "WonderDocs",
       "owner": "Little Dot Studios (All3Media / RedBird IMI)",
       "ownershipType": "full",
       "reportCount": 0,
@@ -320,6 +355,7 @@
     {
       "channelName": "FBE",
       "channelId": "",
+      "handle": "FBE",
       "owner": "ZATV (Brat TV / Electric Monster)",
       "ownershipType": "full",
       "reportCount": 0,
@@ -329,6 +365,7 @@
     {
       "channelName": "Kids Learning Tube",
       "channelId": "",
+      "handle": "kidslearningtube",
       "owner": "ZATV (Brat TV / Electric Monster)",
       "ownershipType": "full",
       "reportCount": 0,
