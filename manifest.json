@@ -11,14 +11,12 @@
   },
   "permissions": [
     "storage",
-    "alarms",
-    "tabs"
+    "alarms"
   ],
   "host_permissions": [
     "*://*.youtube.com/*",
-    "*://api.github.com/*",
-    "*://github.com/*",
-    "*://raw.githubusercontent.com/*"
+    "*://raw.githubusercontent.com/*",
+    "*://*.workers.dev/*"
   ],
   "background": {
     "scripts": ["background.js"]

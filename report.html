@@ -26,44 +26,8 @@
       border-radius: 6px;
       padding: 28px 32px;
     }
-    h1 {
-      margin: 0 0 6px;
-      font-size: 20px;
-    }
-    .sub {
-      color: #666;
-      font-size: 13px;
-      margin-bottom: 24px;
-    }
-    .auth-panel {
-      background: #fff8ec;
-      border: 1px solid #e8d18a;
-      padding: 14px 16px;
-      border-radius: 4px;
-      margin-bottom: 20px;
-      font-size: 13px;
-    }
-    .auth-panel.ok {
-      background: #eef8ee;
-      border-color: #a7d4a7;
-    }
-    .auth-panel.pending {
-      background: #eef4fb;
-      border-color: #a7c1e0;
-    }
-    .auth-panel strong { display: block; margin-bottom: 4px; }
-    .user-code {
-      display: inline-block;
-      font-family: "SF Mono", Menlo, Consolas, monospace;
-      font-size: 22px;
-      font-weight: 600;
-      letter-spacing: 2px;
-      background: #fff;
-      padding: 6px 12px;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      margin: 6px 0;
-    }
+    h1 { margin: 0 0 6px; font-size: 20px; }
+    .sub { color: #666; font-size: 13px; margin-bottom: 24px; }
     label {
       display: block;
       font-size: 13px;
@@ -91,20 +55,11 @@
       font-weight: 600;
     }
     button:disabled { opacity: 0.55; cursor: not-allowed; }
-    .btn-primary {
-      background: var(--red);
-      color: #fff;
-      border-color: var(--red-dark);
-    }
+    .btn-primary { background: var(--red); color: #fff; border-color: var(--red-dark); }
     .btn-primary:hover:not(:disabled) { background: var(--red-dark); }
-    .btn-secondary {
-      background: #fff;
-      color: #333;
-      border-color: var(--border);
-    }
+    .btn-secondary { background: #fff; color: #333; border-color: var(--border); }
     .btn-secondary:hover:not(:disabled) { background: #f0f0f0; }
     .actions { margin-top: 22px; display: flex; gap: 10px; }
-    a { color: var(--red); }
     .success {
       background: #eef8ee;
       border: 1px solid #a7d4a7;
@@ -127,33 +82,7 @@
 <body>
   <div class="wrap">
     <h1>Report a channel</h1>
-    <p class="sub">Flag a YouTube channel you believe is owned or managed by a private equity firm or talent management company. When 10 unique users report the same channel, it&rsquo;s automatically added to the list.</p>
-
-    <!-- Auth panel (changes based on state) -->
-    <div id="auth-unauth" class="auth-panel hidden">
-      <strong>Connect your GitHub account to submit a report</strong>
-      Reports are filed as GitHub Issues on the public channel-list repo. Your GitHub username is recorded so duplicate reports are deduplicated. Only <code>public_repo</code> scope is requested.
-      <div style="margin-top: 10px;">
-        <button type="button" class="btn-primary" id="connect-btn">Connect GitHub</button>
-      </div>
-    </div>
-
-    <div id="auth-pending" class="auth-panel pending hidden">
-      <strong>Waiting for GitHub authorization&hellip;</strong>
-      <div style="margin: 8px 0;">
-        Open <a id="verification-link" href="#" target="_blank" rel="noopener">github.com/login/device</a> and enter this code:
-      </div>
-      <div class="user-code" id="user-code">------</div>
-      <div class="hint">This window will update automatically once you authorize.</div>
-      <div style="margin-top: 10px;">
-        <button type="button" class="btn-secondary" id="cancel-auth-btn">Cancel</button>
-      </div>
-    </div>
-
-    <div id="auth-ok" class="auth-panel ok hidden">
-      <strong>Connected as <span id="gh-username">?</span></strong>
-      <button type="button" class="btn-secondary" id="logout-btn" style="float:right; padding: 4px 10px; font-size: 12px; font-weight: normal;">Disconnect</button>
-    </div>
+    <p class="sub">Flag a YouTube channel you believe is owned or managed by a private equity firm or talent management company. When enough users report the same channel it gets reviewed and added to the list.</p>
 
     <form id="report-form">
       <label for="channel-name">Channel name <span class="req">*</span></label>
@@ -161,17 +90,17 @@
 
       <label for="channel-url">Channel URL <span class="req">*</span></label>
       <input type="url" id="channel-url" name="channelUrl" required placeholder="https://youtube.com/channel/UC...">
-      <div class="hint">The <code>/channel/UC...</code> URL is preferred. <code>/@handle</code> URLs work but the channel ID will need to be looked up.</div>
+      <div class="hint">The <code>/channel/UC...</code> URL is preferred. <code>/@handle</code> URLs work too.</div>
 
       <label for="suspected-owner">Suspected owner company <span class="req">*</span></label>
       <input type="text" id="suspected-owner" name="suspectedOwner" required placeholder="e.g. Electrify Video Partners">
 
       <label for="source-url">Source link <span style="font-weight:normal; color:#777;">(optional)</span></label>
       <input type="url" id="source-url" name="sourceUrl" placeholder="https://...">
-      <div class="hint">Link to an article, tweet, or video confirming the ownership claim. Optional but strongly encouraged.</div>
+      <div class="hint">Link to an article or video confirming the ownership claim.</div>
 
       <div class="actions">
-        <button type="submit" class="btn-primary" id="submit-btn" disabled>Submit report</button>
+        <button type="submit" class="btn-primary" id="submit-btn">Submit report</button>
         <button type="button" class="btn-secondary" id="close-btn">Close</button>
       </div>
 
@@ -179,9 +108,8 @@
     </form>
 
     <div id="success" class="success hidden">
-      <strong>Report submitted.</strong><br>
-      If 10 users report this channel, it will be added to the filter list automatically.
-      Issue: <a id="issue-link" href="#" target="_blank" rel="noopener">#?</a>
+      <strong>Report submitted, thanks.</strong><br>
+      Once enough users report this channel it will be reviewed and added to the filter list.
     </div>
   </div>
 

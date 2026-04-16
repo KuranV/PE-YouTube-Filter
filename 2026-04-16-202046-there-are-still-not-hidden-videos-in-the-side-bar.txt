@@ -1,0 +1,1334 @@
+ ▐▛███▜▌   Claude Code v2.1.110
+▝▜█████▛▘  Sonnet 4.6 · Claude Pro
+  ▘▘ ▝▝    /var/home/vlada/Downloads/PE-YouTube-Filter
+
+❯ there are still not hidden videos in the side bar when watching another       
+  video. there is the code of the element on the website in the new txt file    
+
+  Searched for 2 patterns, read 1 file, listed 2 directories (ctrl+o to expand)
+
+● Let me search for the relevant video item elements in this file.
+
+  Searched for 3 patterns, read 1 file (ctrl+o to expand)
+
+● Bash(sed -n '782,840p'
+      /home/vlada/Downloads/PE-YouTube-Filter/sidebarOnYoutube | grep -oP
+      '<ytd-\w+' | sort | uniq -c | sort -rn | head -20)
+  ⎿        1 <ytd-item
+           1 <ytd-continuation
+           1 <ytd-button
+
+● Bash(sed -n '782,840p'
+      /home/vlada/Downloads/PE-YouTube-Filter/sidebarOnYoutube | grep -oP
+      'ytd-[\w-]+' | sort | uniq -c | sort -rn | head -20)
+  ⎿       30 ytd-item-section-renderer
+           7 ytd-continuation-item-renderer
+           3 ytd-watch-next-secondary-results-renderer
+     … +3 lines (ctrl+o to expand)
+
+● Now let me look at the current content.js to understand how sidebar filtering
+  is implemented:
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● Bash(python3 -c "
+      import re…)
+  ⎿  ['ytd-button-renderer', 'ytd-companion-legal-text-renderer', 'ytd-comp
+     anion-slot-renderer', 'ytd-continuation-item-renderer', 'ytd-item-sect
+     ion-renderer', 'ytd-player-legacy-desktop-watch-ads-renderer', 'ytd-wa
+     tch-next-secondary-results-renderer']
+
+● Bash(python3 -c "
+      import re…)
+  ⎿  Found related divs at positions: [160262, 299802, 462917, 602457]
+     Position 160262: ['ytd-companion-legal-text-renderer', 'ytd-companion-
+     slot-renderer', 'ytd-item-section-renderer', 'ytd-player-legacy-deskto
+     … +10 lines (ctrl+o to expand)
+
+● Bash(python3 -c "
+      import re…)
+  ⎿  ytd-rich-item-renderer: 0 occurrences
+     ytd-compact-video-renderer: 0
+     ytd-video-renderer: 0
+     … +2 lines (ctrl+o to expand)
+
+● Bash(python3 -c "
+      import re…)
+  ⎿  Found at position 164593
+     <div id="items" class="style-scope ytd-watch-next-secondary-results-re
+     nderer"><ytd-item-section-renderer class="style-scope ytd-watch-next-s
+     … +26 lines (ctrl+o to expand)
+
+● Bash(python3 -c "
+      import re…)
+  ⎿  yt-lockup-view-model: 80
+     yt-lockup-view-model class="ytd-item-section-renderer lockup ytLockupV
+     iewModelWrapper"><div class="ytLockupViewModelHost ytLockupViewModelHo
+     … +41 lines (ctrl+o to expand)
+
+● Bash(python3 -c "
+      import re…)
+  ⎿  Channel links found:
+     /@GEN
+     /channel/UCF9OHrRasw-r4JcnBo4E2cg/videos
+     /channel/UCF9OHrRasw-r4JcnBo4E2cg/about
+
+● Bash(python3 -c "
+      import re…)
+  ⎿  Channel from avatar aria-label: ['Zanzlanz']
+     HREFs in lockup: ['/watch?v=XDsYPXRCXAs', '/watch?v=XDsYPXRCXAs']
+
+● Bash(python3 -c "
+      import re…)
+  ⎿  Total lockups: 40
+     Channel: Zanzlanz, ID: N/A, Handle: N/A
+     Channel: Jirka vysvětluje věci, ID: N/A, Handle: N/A
+     … +3 lines (ctrl+o to expand)
+● Bash(python3 -c "
+      import re…)
+  ⎿  All aria-labels: ['Go to channel Zanzlanz', 'How hackers reverse Math.
+     random() 15 minutes', 'More actions']
+     … +9 lines (ctrl+o to expand)
+
+● Bash(python3 -c "
+      import re…)
+  ⎿  Text spans: ['How hackers reverse Math.random()', 'Zanzlanz', '963K vi
+     ews', '4 months ago']
+     Text content: ['Zanzlanz']
+
+● Bash(python3 -c "
+      import re…)
+  ⎿  Context around channel name text:
+     <yt-content-metadata-view-model class="ytContentMetadataViewModelHost"
+     ><div class="ytContentMetadataViewModelMetadataRow"><span style="" cla
+     … +6 lines (ctrl+o to expand)
+
+● Now I have a clear picture. The sidebar uses a new yt-lockup-view-model
+  element format, not ytd-compact-video-renderer. The channel name is in
+  [aria-label^="Go to channel "] on the avatar element. I need to:
+
+  1. Add yt-lockup-view-model to CARD_SELECTORS
+  2. Update readCardChannels() to extract channel names from this new format
+
+● Update(~/Downloads/PE-YouTube-Filter/content.js)
+  ⎿  Added 2 lines, removed 1 line
+      12      'ytd-grid-video-renderer',
+      13      'ytd-reel-item-renderer',
+      14      'ytd-playlist-video-renderer',
+      15 -    'ytd-channel-renderer'        // <-- NEW: search results fo
+         -r channels                                                     
+      15 +    'ytd-channel-renderer',       // search results for channel
+         +s                                                              
+      16 +    'yt-lockup-view-model'        // new sidebar format on watc
+         +h page                                                         
+      17    ];
+      18    const CARD_SELECTOR_LIST = CARD_SELECTORS.join(',');
+      19    const PROCESSED_ATTR = 'data-pe-processed';
+
+● Now update readCardChannels() to handle the new yt-lockup-view-model format:
+
+● Update(~/Downloads/PE-YouTube-Filter/content.js)
+  ⎿  Added 14 lines
+       96        }
+       97      }
+       98  
+       99 +    // For yt-lockup-view-model (new sidebar format on watch p
+          +age), the channel                                             
+      100 +    // name is in the aria-label of the avatar button: "Go to 
+          +channel <Name>".                                              
+      101 +    if (card.tagName && card.tagName.toLowerCase() === 'yt-loc
+          +kup-view-model') {                                            
+      102 +      const avatarEl = card.querySelector('[aria-label^="Go to
+          + channel "]');                                                
+      103 +      if (avatarEl) {                                         
+      104 +        const label = avatarEl.getAttribute('aria-label');    
+      105 +        const name = label.replace(/^Go to channel\s+/, '').tr
+          +im();                                                         
+      106 +        if (name && !seenNames.has(name.toLowerCase())) {     
+      107 +          seenNames.add(name.toLowerCase());                  
+      108 +          results.push({ channelId: null, channelName: name })
+          +;                                                             
+      109 +        }                                                     
+      110 +      }                                                       
+      111 +    }                                                         
+      112 +                                                              
+      113      return results;
+      114    }
+      115  
+
+● Now I also need to handle one edge case: yt-lockup-view-model elements that
+  haven't rendered their avatar yet (the ready: false case). Currently
+  findAnyMatch returns { ready: false } when refs.length === 0. For
+  yt-lockup-view-model, we should check if the avatar element is present before
+  declaring it "ready":
+
+  Read 1 file (ctrl+o to expand)
+
+● Let me verify the final state of the changes:
+
+  Read 1 file (ctrl+o to expand)
+
+● The fix looks correct. Here's what was changed:
+
+  Root cause: YouTube's watch page sidebar now uses yt-lockup-view-model
+  elements instead of the old ytd-compact-video-renderer. These new elements
+  don't have /channel/UCxxx links — only an avatar with aria-label="Go to 
+  channel <Name>".
+
+  Changes in content.js:
+
+  1. CARD_SELECTORS (line 16): Added 'yt-lockup-view-model' so the
+  MutationObserver picks up sidebar cards on the watch page.
+  2. readCardChannels() (lines 99–111): Added a new branch for
+  yt-lockup-view-model that extracts the channel name from [aria-label^="Go to 
+  channel "] on the avatar element.
+
+  Since the sidebar only exposes channel names (not IDs), matching will work by
+  name. Channels in your list that were added by name will be hidden correctly.
+  Channels added only by ID won't match — but that was already the only data
+  available in this new sidebar format.
+
+✻ Worked for 2m 29s
+
+※ recap: Fixed the sidebar on the watch page by adding support for YouTube's new yt-lockup-view-model card format. Reload the extension in Firefox to test it. (disable recaps in /config)
+
+❯ okay that worked, now there is new txt with another element in youtube        
+  (playlist) that should be hidden if its from one of that channels             
+
+  Searched for 1 pattern, listed 1 directory (ctrl+o to expand)
+
+● Bash(python3 -c "
+      import re…)
+  ⎿  Channel from aria-label: []
+     All aria-labels: ['More actions']
+     HREFs: ['/watch?v=AF8d72mA41M&amp;list=PLkahZjV5wKe9q3K-nk82kVD_pNfPZ1
+     … +36 lines (ctrl+o to expand)
+
+● The playlist uses a[href^="/@"] links with the channel name as text content
+  (e.g., <a href="/@veritasium">Veritasium</a>), and no avatar aria-label. I
+  need to update the yt-lockup-view-model branch to handle both cases:
+
+● Update(~/Downloads/PE-YouTube-Filter/content.js)
+  ⎿  Added 12 lines, removed 2 lines
+       96        }
+       97      }
+       98  
+       99 -    // For yt-lockup-view-model (new sidebar format on watch p
+          -age), the channel                                             
+      100 -    // name is in the aria-label of the avatar button: "Go to 
+          -channel <Name>".                                              
+       99 +    // For yt-lockup-view-model (new sidebar/playlist format):
+      100 +    // - Video cards: channel name is in aria-label="Go to cha
+          +nnel <Name>" on the avatar.                                   
+      101 +    // - Playlist cards: channel name is the text of an <a hre
+          +f="/@handle"> link.                                           
+      102      if (card.tagName && card.tagName.toLowerCase() === 'yt-loc
+           kup-view-model') {
+      103        const avatarEl = card.querySelector('[aria-label^="Go to
+            channel "]');
+      104        if (avatarEl) {
+     ...
+      109            results.push({ channelId: null, channelName: name })
+           ;
+      110          }
+      111        }
+      112 +      // Playlist cards expose the channel via a handle link w
+          +hose text is the name.                                        
+      113 +      const handleLinks = card.querySelectorAll('a[href^="/@"]
+          +');                                                           
+      114 +      for (const a of handleLinks) {                          
+      115 +        const name = a.textContent.trim();                    
+      116 +        if (name && !seenNames.has(name.toLowerCase())) {     
+      117 +          seenNames.add(name.toLowerCase());                  
+      118 +          results.push({ channelId: null, channelName: name })
+          +;                                                             
+      119 +        }                                                     
+      120 +      }                                                       
+      121      }
+      122  
+      123      return results;
+
+● Now let me verify the result looks right:
+
+  Read 1 file (ctrl+o to expand)
+
+● Done. The change is minimal — inside the existing yt-lockup-view-model branch,
+   after the avatar check, it now also queries a[href^="/@"] and reads the link
+  text as the channel name. This covers playlist cards where there's no avatar
+  aria-label but there is a /@veritasium style handle link with the channel name
+   as its text content.
+
+✻ Cooked for 34s
+
+❯ okay that also worked. now i would like to get rid of shorts from theese      
+  channels                                                                      
+
+  Listed 1 directory (ctrl+o to expand)
+● No new HTML file yet. Could you drop the element HTML for a Shorts card (like
+  you did for the sidebar and playlist) so I can see exactly what structure
+  YouTube is using? The Shorts shelf, the dedicated /shorts/ page, and search
+  results can all use different element types — the HTML snippet will tell me
+  exactly what to target.
+
+✻ Cooked for 46s
+
+❯ its there now                                                                 
+
+  Searched for 1 pattern, listed 1 directory (ctrl+o to expand)
+
+● Bash(python3 -c "
+      import re…)
+  ⎿  Channel from aria-label: ['Veritasium']
+     HREFs: ['/watch?v=PPJ6NJkmDAo&amp;t=40s&amp;pp=ygUKdmVyaXRhc2l1bQ%3D%3
+     D', '/watch?v=PPJ6NJkmDAo&amp;t=40s&amp;pp=ygUKdmVyaXRhc2l1bQ%3D%3D',
+     … +86 lines (ctrl+o to expand)
+
+  Read 1 file (ctrl+o to expand)
+
+● Bash(python3 -c "
+      import re…)
+  ⎿  Top-level elements:
+     [('div', 774), ('ytd-badge-supported-renderer', 84), ('ytd-thumbnail-o
+     verlay-equalizer', 40), ('yt-interaction', 40), ('button', 4), ('ytd-s
+     … +8 lines (ctrl+o to expand)
+
+● Bash(python3 -c "
+      import re…)
+  ⎿  Shorts indicators: []
+     Badge: ['ytd-thumbnail-overlay-time-status-renderer class="style-scope
+      ytd-thumbnail" hide-time-status="" overlay-style="DEFAULT"><!--css-bu
+     … +25 lines (ctrl+o to expand)
+
+● Bash(python3 -c "
+      import re…)
+  ⎿  ytd-video-renderer total: 40
+     already hidden (data-pe-match=hide): 42
+     Not yet matched: 4
+     … +11 lines (ctrl+o to expand)
+
+● The search results Shorts (ytd-video-renderer) are already being filtered — I
+  can see data-pe-match="hide" on them in the provided HTML. The gap is the home
+   page Shorts shelf, which uses ytd-reel-item-renderer. That element is in
+  CARD_SELECTORS but never has a ytd-channel-name or /channel/UCxxx link — only
+  an avatar with [aria-label^="Go to channel "], just like the new sidebar
+  format.
+
+  Let me add the same extraction logic for ytd-reel-item-renderer:
+
+● Update(~/Downloads/PE-YouTube-Filter/content.js)
+  ⎿  Added 14 lines
+       96        }
+       97      }
+       98  
+       99 +    // For ytd-reel-item-renderer (Shorts shelf on home/subscr
+          +iptions), the                                                 
+      100 +    // channel name is on the avatar: aria-label="Go to channe
+          +l <Name>".                                                    
+      101 +    if (card.tagName && card.tagName.toLowerCase() === 'ytd-re
+          +el-item-renderer') {                                          
+      102 +      const avatarEl = card.querySelector('[aria-label^="Go to
+          + channel "]');                                                
+      103 +      if (avatarEl) {                                         
+      104 +        const label = avatarEl.getAttribute('aria-label');    
+      105 +        const name = label.replace(/^Go to channel\s+/, '').tr
+          +im();                                                         
+      106 +        if (name && !seenNames.has(name.toLowerCase())) {     
+      107 +          seenNames.add(name.toLowerCase());                  
+      108 +          results.push({ channelId: null, channelName: name })
+          +;                                                             
+      109 +        }                                                     
+      110 +      }                                                       
+      111 +    }                                                         
+      112 +                                                              
+      113      // For yt-lockup-view-model (new sidebar/playlist format):
+      114      // - Video cards: channel name is in aria-label="Go to cha
+           nnel <Name>" on the avatar.
+      115      // - Playlist cards: channel name is the text of an <a hre
+           f="/@handle"> link.
+
+● Now let me verify the full readCardChannels function looks clean:
+
+  Read 1 file (ctrl+o to expand)
+
+● Looks good. Here's what was done and why:
+
+  The actual problem: Search result Shorts (ytd-video-renderer) were already
+  being hidden correctly — confirmed by data-pe-match="hide" in the HTML you
+  provided. The gap was the Shorts shelf on the home/subscriptions feed, which
+  uses ytd-reel-item-renderer. That element doesn't have a ytd-channel-name or
+  /channel/UCxxx link — only an avatar with aria-label="Go to channel <Name>".
+
+  Fix: Added a ytd-reel-item-renderer branch (lines 99–111) that extracts the
+  channel name from that avatar aria-label, identical to how the sidebar
+  yt-lockup-view-model works.
+
+✻ Sautéed for 2m 28s
+
+❯ i deleted README.md write me one for the user (very simple), but it should    
+  not look ai generated.                                                        
+
+  Read 2 files (ctrl+o to expand)
+
+● Write(~/Downloads/PE-YouTube-Filter/README.md)
+  ⎿  Wrote 27 lines to
+     ../../../../../home/vlada/Downloads/PE-YouTube-Filter/README.md
+      2 # PE YouTube Filter
+      3 A Firefox extension that hides YouTube content from channels owne
+        d by private equity firms and talent management companies.
+      4 
+      5 ## What it does
+      7 Runs on YouTube and filters out videos, shorts, playlists, and si
+        debar recommendations from channels on the list. The channel list
+         is pulled from GitHub and updates automatically once a week.
+      8 
+      9 ## Modes
+     … +25 lines (ctrl+o to expand)
+
+● Done. Kept it short and straightforward — just what someone actually needs to
+  know to install and use it.
+
+❯ im owner of that repo, my username is KuranV, the repo is                     
+  https://github.com/KuranV/PE-YouTube-Filter, and for oauth app they want      
+  "Homepage URL" but i dont know which url                                      
+
+● Just use the repo URL: https://github.com/KuranV/PE-YouTube-Filter
+
+  The Homepage URL field is just informational — it's shown to users on the
+  OAuth authorization screen so they know what app is requesting access. It
+  doesn't need to be a dedicated website, the repo URL is fine.
+
+❯ and callback url?                                                             
+
+● That depends on what you're building the OAuth app for. What are you trying to
+   do with it — is this for the extension to authenticate with GitHub, for
+  something else?
+
+❯ the extension                                                                 
+
+  Read 1 file (ctrl+o to expand)
+● The extension uses the GitHub Device Flow — the user gets a code, goes to
+  github.com/login/device, and types it in manually. There's no redirect
+  involved, so the callback URL is never actually called.
+
+  GitHub still requires you to fill it in though. Just put the repo URL again:
+
+  https://github.com/KuranV/PE-YouTube-Filter
+
+  Also while you have background.js open — update the two placeholders at the
+  top:
+
+  const REPO_OWNER = 'KuranV';
+  const REPO_NAME  = 'PE-YouTube-Filter';
+
+● Update(~/Downloads/PE-YouTube-Filter/background.js)
+  ⎿  Added 2 lines, removed 2 lines
+      15  // Edit these two to point at your fork of the channel repo. Th
+          e extension
+      16  // will fetch channels.json from the raw URL and submit reports
+           as issues
+      17  // against the same repo.
+      18 -const REPO_OWNER = 'REPLACE_ME_OWNER';                         
+      19 -const REPO_NAME  = 'REPLACE_ME_REPO';                          
+      18 +const REPO_OWNER = 'KuranV';                                   
+      19 +const REPO_NAME  = 'PE-YouTube-Filter';                        
+      20  const CHANNELS_RAW_URL = `https://raw.githubusercontent.com/${R
+          EPO_OWNER}/${REPO_NAME}/main/channels.json`;
+      21  
+      22  // GitHub OAuth client_id for the Device Flow app. Device Flow 
+          doesn't use a
+
+● Once you create the OAuth App and get the client ID, drop it into
+  GITHUB_CLIENT_ID on line 24.
+
+※ recap: Firefox extension that filters YouTube content from private-equity-owned channels. Fixed sidebar, playlist, and Shorts filtering. Next: paste the GitHub OAuth App client ID into GITHUB_CLIENT_ID in background.js. (disable recaps in /config)
+
+❯ done, should i generate client secret?                                        
+
+● No. The extension uses the Device Flow, which is specifically designed to work
+   without a client secret — that's the whole point of it. Secrets can't be
+  safely stored in a browser extension anyway since anyone could extract them
+  from the source.
+
+  Just the client ID is enough, and that's already in background.js.
+
+❯ ok so my extension has everything that its needed                             
+
+● One thing to double-check: on your GitHub OAuth App settings page, make sure
+  "Enable Device Flow" is checked. It's a separate checkbox that's off by
+  default — without it, the auth requests from the extension will fail even
+  though the client ID is correct.
+
+  Other than that, everything looks in order.
+
+※ recap: Building a Firefox extension that filters YouTube content from PE-owned channels. Everything is working and set up. Next: enable Device Flow on the GitHub OAuth App settings page. (disable recaps in /config)
+
+❯ i would like to improve the channel list updates, how?                        
+
+● What aspect are you thinking about? There are a few different directions:
+
+  - Frequency/reliability — the weekly alarm can drift or get skipped; could
+  switch to checking on browser startup + use a smarter schedule
+  - User feedback — the popup shows no info about when the list was last updated
+   or how many channels were added in the last update
+  - Update source — currently pulls raw channels.json directly; could use the
+  GitHub Releases API instead, which gives proper versioning, changelogs, and
+  avoids issues if the file moves
+  - Failed updates — right now a failed fetch is just silently logged; could
+  retry with backoff and surface an error in the popup
+  - Contributing — the report flow submits to GitHub, but there's no way for the
+   list to get community contributions merged automatically
+
+  Which of these is bothering you, or is there something else in mind?
+
+❯ that users need to contribute themselfs i whould like to make second thing    
+  that would be automatic. and that api would be great if its for free          
+
+● The cleanest free setup for this is Cloudflare Workers + D1 (their SQLite
+  database). Free tier is 100k requests/day and 5GB storage — more than enough.
+
+  The idea:
+
+  1. Extension sends reports to your Worker API instead of (or alongside) GitHub
+   issues
+  2. Worker stores them in D1 — tracking how many users reported each channel
+  3. When a channel hits a threshold (e.g. 3 reports), the Worker automatically
+  creates a GitHub PR to add it to channels.json using the GitHub API with a bot
+   token
+  4. You review and merge, or set it to auto-merge
+
+  So the flow becomes fully automatic on the user side — they just hit "Report",
+   done. You only touch it when reviewing the auto-generated PRs.
+
+  Rough API surface you'd need:
+  - POST /report — receives channel reports from the extension
+  - GET /channels — optionally serve the channel list from there instead of raw
+  GitHub (faster, more control)
+
+  To set it up you'd need:
+  - A free Cloudflare account
+  - A D1 database (created via Wrangler CLI)
+  - A GitHub fine-grained token scoped to just that repo for creating PRs
+
+  Want me to write the Worker script and the D1 schema, and update the extension
+   to send reports to it?
+
+✻ Cogitated for 36s
+
+※ recap: Building a Firefox extension that filters YouTube content from PE-owned channels. Just proposed a Cloudflare Workers + D1 backend for automatic channel reporting aggregation. Next: user needs to confirm so the Worker script, D1 schema, and extension changes can be written.
+
+❯ i created cloudflare acc                                                      
+
+● Let me check the current report flow first so I know exactly what data gets
+  submitted.
+
+  Read 2 files (ctrl+o to expand)
+
+● Good. Now I have everything I need. Here's the plan before I write code:
+
+  1. Create worker/ — Cloudflare Worker with D1 schema and the worker script.
+  Accepts POST /report, stores in D1, and a daily cron creates one GitHub PR
+  with all channels that hit the threshold
+  2. Create wrangler.toml — Cloudflare config
+  3. Simplify report.html + report.js — remove the entire GitHub OAuth flow,
+  replace with a plain form that POSTs to the Worker
+  4. Clean up background.js — remove device flow code that's no longer needed
+  5. Update manifest.json — add workers.dev to host_permissions
+
+  Writing it all now:
+
+● Bash(mkdir -p /home/vlada/Downloads/PE-YouTube-Filter/worker)
+  ⎿  Done
+
+● Write(~/Downloads/PE-YouTube-Filter/worker/schema.sql)
+  ⎿  Wrote 30 lines to ../../../../../home/vlada/Downloads/PE-YouTube-Filte
+     r/worker/schema.sql
+       2 -- The unique index prevents the same IP from reporting the same
+          channel twice.
+       3 CREATE TABLE IF NOT EXISTS reports (
+       4   id              INTEGER PRIMARY KEY AUTOINCREMENT,
+       5   channel_key     TEXT    NOT NULL,  -- channelId if known, else
+       6   channel_id      TEXT,
+       7   channel_name    TEXT    NOT NULL,
+       8   channel_url     TEXT    NOT NULL,
+       9   suspected_owner TEXT    NOT NULL,
+      10   source_url      TEXT,
+     … +22 lines (ctrl+o to expand)
+
+● Write(~/Downloads/PE-YouTube-Filter/worker/index.js)
+  ⎿  Wrote 233 lines to
+     ../../../../../home/vlada/Downloads/PE-YouTube-Filter/worker/index.js
+       2  * PE YouTube Filter — Cloudflare Worker
+       3  *
+       4  * POST /report  — accept a channel report from the extension
+       5  * Cron (daily)  — find channels that hit the threshold and open
+          one GitHub PR
+       7  * Required secrets (set via `wrangler secret put`):
+       8  *   GITHUB_TOKEN  — fine-grained PAT with Contents + Pull reque
+         sts write on the repo
+       9  *
+      10  * Required D1 binding: DB  (see wrangler.toml)
+     … +257 lines (ctrl+o to expand)
+
+● Write(~/Downloads/PE-YouTube-Filter/wrangler.toml)
+  ⎿  Wrote 11 lines to
+     ../../../../../home/vlada/Downloads/PE-YouTube-Filter/wrangler.toml
+       1 name = "pe-youtube-filter"
+       2 main = "worker/index.js"
+       3 compatibility_date = "2024-09-23"
+       4 
+       5 [triggers]
+       6 crons = ["0 9 * * *"]  # runs daily at 9:00 UTC
+       7 
+       8 [[d1_databases]]
+       9 binding     = "DB"
+      10 database_name = "pe-reports"
+     … +2 lines (ctrl+o to expand)
+
+● Now simplify report.html — remove all the GitHub auth panels:
+
+● Write(~/Downloads/PE-YouTube-Filter/report.html)
+  ⎿  Added 10 lines, removed 82 lines
+      26        border-radius: 6px;
+      27        padding: 28px 32px;
+      28      }
+      29 -    h1 {                                                       
+      30 -      margin: 0 0 6px;                                         
+      31 -      font-size: 20px;                                         
+      32 -    }                                                          
+      33 -    .sub {                                                     
+      34 -      color: #666;                                             
+      35 -      font-size: 13px;                                         
+      36 -      margin-bottom: 24px;                                     
+      37 -    }                                                          
+      38 -    .auth-panel {                                              
+      39 -      background: #fff8ec;                                     
+      40 -      border: 1px solid #e8d18a;                               
+      41 -      padding: 14px 16px;                                      
+      42 -      border-radius: 4px;                                      
+      43 -      margin-bottom: 20px;                                     
+      44 -      font-size: 13px;                                         
+      45 -    }                                                          
+      46 -    .auth-panel.ok {                                           
+      47 -      background: #eef8ee;                                     
+      48 -      border-color: #a7d4a7;                                   
+      49 -    }                                                          
+      50 -    .auth-panel.pending {                                      
+      51 -      background: #eef4fb;                                     
+      52 -      border-color: #a7c1e0;                                   
+      53 -    }                                                          
+      54 -    .auth-panel strong { display: block; margin-bottom: 4px; } 
+      55 -    .user-code {                                               
+      56 -      display: inline-block;                                   
+      57 -      font-family: "SF Mono", Menlo, Consolas, monospace;      
+      58 -      font-size: 22px;                                         
+      59 -      font-weight: 600;                                        
+      60 -      letter-spacing: 2px;                                     
+      61 -      background: #fff;                                        
+      62 -      padding: 6px 12px;                                       
+      63 -      border: 1px solid var(--border);                         
+      64 -      border-radius: 4px;                                      
+      65 -      margin: 6px 0;                                           
+      66 -    }                                                          
+      29 +    h1 { margin: 0 0 6px; font-size: 20px; }                   
+      30 +    .sub { color: #666; font-size: 13px; margin-bottom: 24px; }
+      31      label {
+      32        display: block;
+      33        font-size: 13px;
+     ...
+       55        font-weight: 600;
+       56      }
+       57      button:disabled { opacity: 0.55; cursor: not-allowed; }
+       94 -    .btn-primary {                                            
+       95 -      background: var(--red);                                 
+       96 -      color: #fff;                                            
+       97 -      border-color: var(--red-dark);                          
+       98 -    }                                                         
+       58 +    .btn-primary { background: var(--red); color: #fff; border
+          +-color: var(--red-dark); }                                    
+       59      .btn-primary:hover:not(:disabled) { background: var(--red-
+           dark); }
+      100 -    .btn-secondary {                                          
+      101 -      background: #fff;                                       
+      102 -      color: #333;                                            
+      103 -      border-color: var(--border);                            
+      104 -    }                                                         
+       60 +    .btn-secondary { background: #fff; color: #333; border-col
+          +or: var(--border); }                                          
+       61      .btn-secondary:hover:not(:disabled) { background: #f0f0f0;
+            }
+       62      .actions { margin-top: 22px; display: flex; gap: 10px; }
+      107 -    a { color: var(--red); }                                  
+       63      .success {
+       64        background: #eef8ee;
+       65        border: 1px solid #a7d4a7;
+     ...
+       82  <body>
+       83    <div class="wrap">
+       84      <h1>Report a channel</h1>
+      130 -    <p class="sub">Flag a YouTube channel you believe is owned
+          - or managed by a private equity firm or talent management comp
+          -any. When 10 unique users report the same channel, it&rsquo;s 
+          -automatically added to the list.</p>                          
+       85 +    <p class="sub">Flag a YouTube channel you believe is owned
+          + or managed by a private equity firm or talent management comp
+          +any. When enough users report the same channel it gets reviewe
+          +d and added to the list.</p>                                  
+       86  
+      132 -    <!-- Auth panel (changes based on state) -->              
+      133 -    <div id="auth-unauth" class="auth-panel hidden">          
+      134 -      <strong>Connect your GitHub account to submit a report</
+          -strong>                                                       
+      135 -      Reports are filed as GitHub Issues on the public channel
+          --list repo. Your GitHub username is recorded so duplicate repo
+          -rts are deduplicated. Only <code>public_repo</code> scope is r
+          -equested.                                                     
+      136 -      <div style="margin-top: 10px;">                         
+      137 -        <button type="button" class="btn-primary" id="connect-
+          -btn">Connect GitHub</button>                                  
+      138 -      </div>                                                  
+      139 -    </div>                                                    
+      140 -                                                              
+      141 -    <div id="auth-pending" class="auth-panel pending hidden"> 
+      142 -      <strong>Waiting for GitHub authorization&hellip;</strong
+          ->                                                             
+      143 -      <div style="margin: 8px 0;">                            
+      144 -        Open <a id="verification-link" href="#" target="_blank
+          -" rel="noopener">github.com/login/device</a> and enter this co
+          -de:                                                           
+      145 -      </div>                                                  
+      146 -      <div class="user-code" id="user-code">------</div>      
+      147 -      <div class="hint">This window will update automatically 
+          -once you authorize.</div>                                     
+      148 -      <div style="margin-top: 10px;">                         
+      149 -        <button type="button" class="btn-secondary" id="cancel
+          --auth-btn">Cancel</button>                                    
+      150 -      </div>                                                  
+      151 -    </div>                                                    
+      152 -                                                              
+      153 -    <div id="auth-ok" class="auth-panel ok hidden">           
+      154 -      <strong>Connected as <span id="gh-username">?</span></st
+          -rong>                                                         
+      155 -      <button type="button" class="btn-secondary" id="logout-b
+          -tn" style="float:right; padding: 4px 10px; font-size: 12px; fo
+          -nt-weight: normal;">Disconnect</button>                       
+      156 -    </div>                                                    
+      157 -                                                              
+       87      <form id="report-form">
+       88        <label for="channel-name">Channel name <span class="req"
+           >*</span></label>
+       89        <input type="text" id="channel-name" name="channelName" 
+           required placeholder="e.g. Veritasium">
+       90  
+       91        <label for="channel-url">Channel URL <span class="req">*
+           </span></label>
+       92        <input type="url" id="channel-url" name="channelUrl" req
+           uired placeholder="https://youtube.com/channel/UC...">
+      164 -      <div class="hint">The <code>/channel/UC...</code> URL is
+          - preferred. <code>/@handle</code> URLs work but the channel ID
+          - will need to be looked up.</div>                             
+       93 +      <div class="hint">The <code>/channel/UC...</code> URL is
+          + preferred. <code>/@handle</code> URLs work too.</div>        
+       94  
+       95        <label for="suspected-owner">Suspected owner company <sp
+           an class="req">*</span></label>
+       96        <input type="text" id="suspected-owner" name="suspectedO
+           wner" required placeholder="e.g. Electrify Video Partners">
+       97  
+       98        <label for="source-url">Source link <span style="font-we
+           ight:normal; color:#777;">(optional)</span></label>
+       99        <input type="url" id="source-url" name="sourceUrl" place
+           holder="https://...">
+      171 -      <div class="hint">Link to an article, tweet, or video co
+          -nfirming the ownership claim. Optional but strongly encouraged
+          -.</div>                                                       
+      100 +      <div class="hint">Link to an article or video confirming
+          + the ownership claim.</div>                                   
+      101  
+      102        <div class="actions">
+      174 -        <button type="submit" class="btn-primary" id="submit-b
+          -tn" disabled>Submit report</button>                           
+      103 +        <button type="submit" class="btn-primary" id="submit-b
+          +tn">Submit report</button>                                    
+      104          <button type="button" class="btn-secondary" id="close-
+           btn">Close</button>
+      105        </div>
+      106  
+     ...
+      108      </form>
+      109  
+      110      <div id="success" class="success hidden">
+      182 -      <strong>Report submitted.</strong><br>                  
+      183 -      If 10 users report this channel, it will be added to the
+          - filter list automatically.                                   
+      184 -      Issue: <a id="issue-link" href="#" target="_blank" rel="
+          -noopener">#?</a>                                              
+      111 +      <strong>Report submitted, thanks.</strong><br>          
+      112 +      Once enough users report this channel it will be reviewe
+          +d and added to the filter list.                               
+      113      </div>
+      114    </div>
+      115  
+
+● Write(~/Downloads/PE-YouTube-Filter/report.js)
+  ⎿  Added 36 lines, removed 175 lines
+        1 -/* PE YouTube Filter — report form logic */                   
+        1 +/* PE YouTube Filter — report form */                         
+        2  
+        3 -// These must match background.js.                            
+        4 -const REPO_OWNER = 'REPLACE_ME_OWNER';                        
+        5 -const REPO_NAME  = 'REPLACE_ME_REPO';                         
+        6 -const EXTENSION_VERSION = browser.runtime.getManifest().versio
+          -n;                                                            
+        3 +const WORKER_URL = 'REPLACE_WITH_YOUR_WORKER_URL'; // e.g. htt
+          +ps://pe-youtube-filter.yourname.workers.dev                   
+        4  
+        8 -const $ = (sel) => document.querySelector(sel);               
+        5 +const form       = document.getElementById('report-form');    
+        6 +const submitBtn  = document.getElementById('submit-btn');     
+        7 +const closeBtn   = document.getElementById('close-btn');      
+        8 +const errorBox   = document.getElementById('error-box');      
+        9 +const successBox = document.getElementById('success');        
+       10  
+       10 -const authUnauth = $('#auth-unauth');                         
+       11 -const authPending = $('#auth-pending');                       
+       12 -const authOk = $('#auth-ok');                                 
+       13 -const connectBtn = $('#connect-btn');                         
+       14 -const cancelAuthBtn = $('#cancel-auth-btn');                  
+       15 -const logoutBtn = $('#logout-btn');                           
+       16 -const userCodeEl = $('#user-code');                           
+       17 -const verificationLink = $('#verification-link');             
+       18 -const ghUsernameEl = $('#gh-username');                       
+       19 -const form = $('#report-form');                               
+       20 -const submitBtn = $('#submit-btn');                           
+       21 -const closeBtn = $('#close-btn');                             
+       22 -const errorBox = $('#error-box');                             
+       23 -const successBox = $('#success');                             
+       24 -const issueLink = $('#issue-link');                           
+       25 -                                                              
+       26 -let currentAuth = { authenticated: false, username: null };   
+       27 -let authPollTimer = null;                                     
+       28 -                                                              
+       29 -function showOnly(el) {                                       
+       30 -  for (const panel of [authUnauth, authPending, authOk]) {    
+       31 -    panel.classList.toggle('hidden', panel !== el);           
+       32 -  }                                                           
+       33 -}                                                             
+       34 -                                                              
+       11  function showError(msg) {
+       12    errorBox.textContent = msg;
+       13    errorBox.classList.remove('hidden');
+       14  }
+       39 -function clearError() { errorBox.classList.add('hidden'); erro
+          -rBox.textContent = ''; }                                      
+       40 -                                                              
+       41 -async function refreshAuth() {                                
+       42 -  const resp = await browser.runtime.sendMessage({ type: 'pe:c
+          -heck-auth' });                                                
+       43 -  currentAuth = resp || { authenticated: false, username: null
+          - };                                                           
+       44 -  if (currentAuth.authenticated) {                            
+       45 -    showOnly(authOk);                                         
+       46 -    ghUsernameEl.textContent = currentAuth.username || '(unkno
+          -wn)';                                                         
+       47 -    submitBtn.disabled = false;                               
+       48 -    stopAuthPoll();                                           
+       49 -  } else {                                                    
+       50 -    // Only switch to the unauth panel if we aren't mid-flow. 
+       51 -    if (authPending.classList.contains('hidden')) showOnly(aut
+          -hUnauth);                                                     
+       52 -    submitBtn.disabled = true;                                
+       53 -  }                                                           
+       15 +function clearError() {                                       
+       16 +  errorBox.classList.add('hidden');                           
+       17 +  errorBox.textContent = '';                                  
+       18  }
+       19  
+       56 -function startAuthPoll() {                                    
+       57 -  stopAuthPoll();                                             
+       58 -  authPollTimer = setInterval(refreshAuth, 3000);             
+       59 -}                                                             
+       60 -function stopAuthPoll() {                                     
+       61 -  if (authPollTimer) { clearInterval(authPollTimer); authPollT
+          -imer = null; }                                                
+       62 -}                                                             
+       63 -                                                              
+       64 -connectBtn.addEventListener('click', async () => {            
+       65 -  clearError();                                               
+       66 -  connectBtn.disabled = true;                                 
+       67 -  try {                                                       
+       68 -    const flow = await browser.runtime.sendMessage({ type: 'pe
+          -:start-device-flow' });                                       
+       69 -    if (!flow || !flow.userCode) {                            
+       70 -      showError('Could not start GitHub authorization. Please 
+          -try again.');                                                 
+       71 -      connectBtn.disabled = false;                            
+       72 -      return;                                                 
+       73 -    }                                                         
+       74 -    userCodeEl.textContent = flow.userCode;                   
+       75 -    verificationLink.href = flow.verificationUri;             
+       76 -    verificationLink.textContent = flow.verificationUri;      
+       77 -    showOnly(authPending);                                    
+       78 -    // Opening the verification URL in a new tab saves the use
+          -r a step.                                                     
+       79 -    browser.tabs.create({ url: flow.verificationUri }).catch((
+          -) => {});                                                     
+       80 -    startAuthPoll();                                          
+       81 -  } catch (err) {                                             
+       82 -    showError('Failed to start OAuth: ' + err.message);       
+       83 -    connectBtn.disabled = false;                              
+       84 -  }                                                           
+       85 -});                                                           
+       86 -                                                              
+       87 -cancelAuthBtn.addEventListener('click', async () => {         
+       88 -  stopAuthPoll();                                             
+       89 -  connectBtn.disabled = false;                                
+       90 -  showOnly(authUnauth);                                       
+       91 -});                                                           
+       92 -                                                              
+       93 -logoutBtn.addEventListener('click', async () => {             
+       94 -  await browser.runtime.sendMessage({ type: 'pe:logout' });   
+       95 -  await refreshAuth();                                        
+       96 -});                                                           
+       97 -                                                              
+       20  closeBtn.addEventListener('click', () => window.close());
+       21  
+      100 -// ---------- SUBMIT ----------                               
+      101 -                                                              
+      102 -function validateChannelUrl(url) {                            
+      103 -  try {                                                       
+      104 -    const u = new URL(url);                                   
+      105 -    if (!/youtube\.com$/.test(u.hostname) && u.hostname !== 'y
+          -outu.be') return false;                                       
+      106 -    return true;                                              
+      107 -  } catch { return false; }                                   
+      108 -}                                                             
+      109 -                                                              
+      110 -function extractChannelIdFromUrl(url) {                       
+      111 -  try {                                                       
+      112 -    const u = new URL(url);                                   
+      113 -    const m = u.pathname.match(/\/channel\/(UC[\w-]{20,})/);  
+      114 -    return m ? m[1] : null;                                   
+      115 -  } catch { return null; }                                    
+      116 -}                                                             
+      117 -                                                              
+       22  form.addEventListener('submit', async (e) => {
+       23    e.preventDefault();
+       24    clearError();
+       25  
+      122 -  if (!currentAuth.authenticated) {                           
+      123 -    showError('You need to connect GitHub before submitting.')
+          -;                                                             
+      124 -    return;                                                   
+      125 -  }                                                           
+       26 +  const channelName   = document.getElementById('channel-name'
+          +).value.trim();                                               
+       27 +  const channelUrl    = document.getElementById('channel-url')
+          +.value.trim();                                                
+       28 +  const suspectedOwner = document.getElementById('suspected-ow
+          +ner').value.trim();                                           
+       29 +  const sourceUrl     = document.getElementById('source-url').
+          +value.trim();                                                 
+       30  
+      127 -  const channelName = $('#channel-name').value.trim();        
+      128 -  const channelUrl = $('#channel-url').value.trim();          
+      129 -  const suspectedOwner = $('#suspected-owner').value.trim();  
+      130 -  const sourceUrl = $('#source-url').value.trim();            
+       31 +  const channelId = extractChannelId(channelUrl);             
+       32  
+      132 -  if (!validateChannelUrl(channelUrl)) {                      
+      133 -    showError('Channel URL must be a youtube.com URL.');      
+      134 -    return;                                                   
+      135 -  }                                                           
+      136 -  const channelId = extractChannelIdFromUrl(channelUrl) || '';
+      137 -                                                              
+      138 -  // Duplicate check — per spec §5.3, we cache the IDs of chan
+          -nels this user                                                
+      139 -  // has already reported so the UI prevents double submission
+          -.                                                             
+       33 +  // Local dedup — prevent submitting the same channel twice f
+          +rom this browser.                                             
+       34    const { reportedChannels = [] } = await browser.storage.loca
+           l.get('reportedChannels');
+       35    const dedupeKey = channelId || channelName.toLowerCase();
+       36    if (reportedChannels.includes(dedupeKey)) {
+     ...
+       38      return;
+       39    }
+       40  
+      147 -  const { githubToken, githubUsername } = await browser.storag
+          -e.local.get(['githubToken', 'githubUsername']);               
+      148 -  if (!githubToken) {                                         
+      149 -    showError('GitHub token missing. Please reconnect.');     
+      150 -    await refreshAuth();                                      
+      151 -    return;                                                   
+      152 -  }                                                           
+      153 -                                                              
+      154 -  const title = `[channel-report] ${channelName}${channelId ? 
+          -' — ' + channelId : ''}`;                                     
+      155 -  const body = [                                              
+      156 -    `**Channel Name:** ${channelName}`,                       
+      157 -    `**Channel URL:** ${channelUrl}`,                         
+      158 -    `**Channel ID:** ${channelId || '(not provided)'}`,       
+      159 -    `**Suspected Owner:** ${suspectedOwner}`,                 
+      160 -    `**Source (optional):** ${sourceUrl || '(none)'}`,        
+      161 -    `**Reported by:** @${githubUsername || '(unknown)'}`,     
+      162 -    `**Extension version:** ${EXTENSION_VERSION}`             
+      163 -  ].join('\n');                                               
+      164 -                                                              
+       41    submitBtn.disabled = true;
+       42    submitBtn.textContent = 'Submitting…';
+       43 +                                                              
+       44    try {
+      168 -    const resp = await fetch(`https://api.github.com/repos/${R
+          -EPO_OWNER}/${REPO_NAME}/issues`, {                            
+       45 +    const resp = await fetch(`${WORKER_URL}/report`, {        
+       46        method: 'POST',
+      170 -      headers: {                                              
+      171 -        'Authorization': `Bearer ${githubToken}`,             
+      172 -        'Accept': 'application/vnd.github+json',              
+      173 -        'Content-Type': 'application/json',                   
+      174 -        'X-GitHub-Api-Version': '2022-11-28'                  
+      175 -      },                                                      
+      176 -      body: JSON.stringify({                                  
+      177 -        title,                                                
+      178 -        body,                                                 
+      179 -        labels: ['channel-report']                            
+      180 -      })                                                      
+       47 +      headers: { 'Content-Type': 'application/json' },        
+       48 +      body: JSON.stringify({ channelName, channelUrl, channelI
+          +d, suspectedOwner, sourceUrl }),                              
+       49      });
+       50  
+      183 -    if (resp.status === 401) {                                
+      184 -      // Token expired/revoked — clear and prompt to reconnect
+          -.                                                             
+      185 -      await browser.runtime.sendMessage({ type: 'pe:logout' })
+          -;                                                             
+      186 -      await refreshAuth();                                    
+      187 -      showError('Your GitHub session expired. Please reconnect
+          - and try again.');                                            
+      188 -      submitBtn.disabled = false;                             
+      189 -      submitBtn.textContent = 'Submit report';                
+      190 -      return;                                                 
+      191 -    }                                                         
+       51      if (!resp.ok) {
+      193 -      const text = await resp.text();                         
+      194 -      showError(`GitHub API error (${resp.status}): ${text.sli
+          -ce(0, 200)}`);                                                
+       52 +      const data = await resp.json().catch(() => ({}));       
+       53 +      showError(data.error || `Server error (${resp.status}). 
+          +Please try again.`);                                          
+       54        submitBtn.disabled = false;
+       55        submitBtn.textContent = 'Submit report';
+       56        return;
+       57      }
+       58  
+      200 -    const issue = await resp.json();                          
+       59      reportedChannels.push(dedupeKey);
+       60      await browser.storage.local.set({ reportedChannels });
+       61  
+       62      form.classList.add('hidden');
+       63      successBox.classList.remove('hidden');
+      206 -    issueLink.href = issue.html_url;                          
+      207 -    issueLink.textContent = `#${issue.number}`;               
+       64    } catch (err) {
+       65      showError('Network error: ' + err.message);
+       66      submitBtn.disabled = false;
+     ...
+       68    }
+       69  });
+       70  
+      215 -// ---------- INIT ----------                                 
+       71 +function extractChannelId(url) {                              
+       72 +  try {                                                       
+       73 +    const m = new URL(url).pathname.match(/\/channel\/(UC[\w-]
+          +{20,})/);                                                     
+       74 +    return m ? m[1] : null;                                   
+       75 +  } catch {                                                   
+       76 +    return null;                                              
+       77 +  }                                                           
+       78 +}                                                             
+       79  
+      217 -function prefillFromQuery() {                                 
+       80 +// Pre-fill from query params (e.g. when opened from the conte
+          +nt script).                                                   
+       81 +(function prefill() {                                         
+       82    const params = new URLSearchParams(location.search);
+      219 -  const chId = params.get('channelId');                       
+       83 +  const chId   = params.get('channelId');                     
+       84    const chName = params.get('channelName');
+      221 -  if (chId) $('#channel-url').value = `https://www.youtube.com
+          -/channel/${chId}`;                                            
+      222 -  if (chName) $('#channel-name').value = chName;              
+      223 -}                                                             
+      224 -                                                              
+      225 -prefillFromQuery();                                           
+      226 -refreshAuth();                                                
+       85 +  if (chId)   document.getElementById('channel-url').value  = 
+          +`https://www.youtube.com/channel/${chId}`;                    
+       86 +  if (chName) document.getElementById('channel-name').value = 
+          +chName;                                                       
+       87 +})();                                                         
+● Now clean up background.js — remove the device flow, GitHub OAuth message
+  handlers, and the pe:context-report handler that's no longer used:
+
+● Update(~/Downloads/PE-YouTube-Filter/background.js)
+  ⎿  Added 1 line, removed 6 lines
+       5   *   1. On install, seed browser.storage.local with the bundled
+           channels.json.
+       6   *   2. Schedule a weekly refresh from the raw GitHub URL. Resp
+          ect ETag /
+       7   *      version field to skip no-op updates.
+       8 - *   3. Handle the GitHub OAuth Device Flow (start + poll) so t
+         -he report                                                      
+       9 - *      page doesn't have to stay open while we wait for the us
+         -er to enter                                                    
+      10 - *      the code at github.com/login/device.                   
+      11 - *   4. Relay messages between content scripts and the stored c
+         -hannel list.                                                   
+       8 + *   3. Relay messages between content scripts and the stored c
+         +hannel list.                                                   
+       9   */
+      10  
+      11  // ---------- CONFIG ----------
+     ...
+      13  const REPO_OWNER = 'KuranV';
+      14  const REPO_NAME  = 'PE-YouTube-Filter';
+      15  const CHANNELS_RAW_URL = `https://raw.githubusercontent.com/${R
+          EPO_OWNER}/${REPO_NAME}/main/channels.json`;
+      19 -const GITHUB_CLIENT_ID = 'Ov23liUf4UJiPEOurMAk';               
+      20 -const GITHUB_OAUTH_SCOPE = 'public_repo';                      
+      16  
+      17  const REFRESH_ALARM = 'pe:weekly-refresh';
+      18  const REFRESH_PERIOD_MINUTES = 7 * 24 * 60; // 1 week
+
+● Update(~/Downloads/PE-YouTube-Filter/background.js)
+  ⎿  Added 1 line, removed 124 lines
+      118    return { updated: true, version: newVersion };
+      119  }
+      120  
+      121 -// ---------- GITHUB OAUTH — DEVICE FLOW ----------           
+      122 -//                                                            
+      123 -// Flow:                                                      
+      124 -//   1. POST https://github.com/login/device/code             
+      125 -//        -> { device_code, user_code, verification_uri, inter
+          -val, expires_in }                                             
+      126 -//      We return user_code + verification_uri to the report p
+          -age. The user                                                 
+      127 -//      opens the URI and enters the code.                    
+      128 -//   2. POST https://github.com/login/oauth/access_token (poll
+          -ing every `interval` seconds)                                 
+      129 -//        -> { access_token } once the user authorizes        
+      130 -//        -> or { error: "authorization_pending" | "slow_down"
+          - | ... } until then                                           
+      131 -//   3. Store the token in browser.storage.local.githubToken. 
+      132 -//                                                            
+      133 -// We run the poll loop in the background so it survives the p
+          -opup closing.                                                 
+      134 -                                                              
+      135 -let activeDeviceFlow = null; // { deviceCode, interval, expire
+          -sAt, resolve }                                                
+      136 -                                                              
+      137 -async function startDeviceFlow() {                            
+      138 -  // If one is already in progress and not expired, return it.
+      139 -  if (activeDeviceFlow && activeDeviceFlow.expiresAt > Date.no
+          -w()) {                                                        
+      140 -    return {                                                  
+      141 -      userCode: activeDeviceFlow.userCode,                    
+      142 -      verificationUri: activeDeviceFlow.verificationUri,      
+      143 -      expiresAt: activeDeviceFlow.expiresAt                   
+      144 -    };                                                        
+      145 -  }                                                           
+      146 -                                                              
+      147 -  const resp = await fetch('https://github.com/login/device/co
+          -de', {                                                        
+      148 -    method: 'POST',                                           
+      149 -    headers: { 'Accept': 'application/json', 'Content-Type': '
+          -application/json' },                                          
+      150 -    body: JSON.stringify({ client_id: GITHUB_CLIENT_ID, scope:
+          - GITHUB_OAUTH_SCOPE })                                        
+      151 -  });                                                         
+      152 -  if (!resp.ok) throw new Error(`device code request failed: $
+          -{resp.status}`);                                              
+      153 -  const data = await resp.json();                             
+      154 -                                                              
+      155 -  activeDeviceFlow = {                                        
+      156 -    deviceCode: data.device_code,                             
+      157 -    userCode: data.user_code,                                 
+      158 -    verificationUri: data.verification_uri,                   
+      159 -    interval: Math.max(5, data.interval || 5),                
+      160 -    expiresAt: Date.now() + (data.expires_in * 1000)          
+      161 -  };                                                          
+      162 -                                                              
+      163 -  // Start polling in the background (does not await).        
+      164 -  pollForToken().catch((e) => console.warn('[PE] device flow p
+          -oll error', e));                                              
+      165 -                                                              
+      166 -  return {                                                    
+      167 -    userCode: activeDeviceFlow.userCode,                      
+      168 -    verificationUri: activeDeviceFlow.verificationUri,        
+      169 -    expiresAt: activeDeviceFlow.expiresAt                     
+      170 -  };                                                          
+      171 -}                                                             
+      172 -                                                              
+      173 -async function pollForToken() {                               
+      174 -  while (activeDeviceFlow && Date.now() < activeDeviceFlow.exp
+          -iresAt) {                                                     
+      175 -    await new Promise(r => setTimeout(r, activeDeviceFlow.inte
+          -rval * 1000));                                                
+      176 -    if (!activeDeviceFlow) return;                            
+      177 -                                                              
+      178 -    let resp;                                                 
+      179 -    try {                                                     
+      180 -      resp = await fetch('https://github.com/login/oauth/acces
+          -s_token', {                                                   
+      181 -        method: 'POST',                                       
+      182 -        headers: { 'Accept': 'application/json', 'Content-Type
+          -': 'application/json' },                                      
+      183 -        body: JSON.stringify({                                
+      184 -          client_id: GITHUB_CLIENT_ID,                        
+      185 -          device_code: activeDeviceFlow.deviceCode,           
+      186 -          grant_type: 'urn:ietf:params:oauth:grant-type:device
+          -_code'                                                        
+      187 -        })                                                    
+      188 -      });                                                     
+      189 -    } catch (err) {                                           
+      190 -      continue; // transient network — keep trying            
+      191 -    }                                                         
+      192 -                                                              
+      193 -    let data;                                                 
+      194 -    try { data = await resp.json(); } catch (_) { continue; } 
+      195 -                                                              
+      196 -    if (data.access_token) {                                  
+      197 -      // Fetch the username so we can store it alongside the t
+          -oken.                                                         
+      198 -      let username = null;                                    
+      199 -      try {                                                   
+      200 -        const userResp = await fetch('https://api.github.com/u
+          -ser', {                                                       
+      201 -          headers: { 'Authorization': `Bearer ${data.access_to
+          -ken}`, 'Accept': 'application/vnd.github+json' }              
+      202 -        });                                                   
+      203 -        if (userResp.ok) {                                    
+      204 -          const u = await userResp.json();                    
+      205 -          username = u.login;                                 
+      206 -        }                                                     
+      207 -      } catch (_) { /* non-fatal */ }                         
+      208 -                                                              
+      209 -      await browser.storage.local.set({                       
+      210 -        githubToken: data.access_token,                       
+      211 -        githubUsername: username,                             
+      212 -        githubAuthAt: Date.now()                              
+      213 -      });                                                     
+      214 -      activeDeviceFlow = null;                                
+      215 -      return { ok: true };                                    
+      216 -    }                                                         
+      217 -                                                              
+      218 -    if (data.error === 'authorization_pending') continue;     
+      219 -    if (data.error === 'slow_down') {                         
+      220 -      activeDeviceFlow.interval += 5;                         
+      221 -      continue;                                               
+      222 -    }                                                         
+      223 -    // expired, access_denied, etc. — give up.                
+      224 -    activeDeviceFlow = null;                                  
+      225 -    await browser.storage.local.set({ githubAuthError: data.er
+          -ror || 'unknown' });                                          
+      226 -    return { ok: false, error: data.error };                  
+      227 -  }                                                           
+      228 -  activeDeviceFlow = null;                                    
+      229 -}                                                             
+      230 -                                                              
+      121  // ---------- MESSAGE ROUTER ----------
+      122  
+      233 -browser.runtime.onMessage.addListener((msg, sender) => {      
+      123 +browser.runtime.onMessage.addListener((msg) => {              
+      124    if (!msg || typeof msg !== 'object') return;
+      125    switch (msg.type) {
+      126      case 'pe:request-channels':
+      127        return browser.storage.local.get('channelList').then(({ 
+           channelList }) => ({ list: channelList }));
+      128      case 'pe:refresh-channels':
+      129        return refreshChannels();
+      240 -    case 'pe:start-device-flow':                              
+      241 -      return startDeviceFlow();                               
+      242 -    case 'pe:check-auth':                                     
+      243 -      return browser.storage.local.get(['githubToken', 'github
+          -Username']).then(({ githubToken, githubUsername }) => ({      
+      244 -        authenticated: !!githubToken,                         
+      245 -        username: githubUsername || null                      
+      246 -      }));                                                    
+      247 -    case 'pe:logout':                                         
+      248 -      activeDeviceFlow = null;                                
+      249 -      return browser.storage.local.remove(['githubToken', 'git
+          -hubUsername', 'githubAuthAt', 'githubAuthError'])             
+      250 -        .then(() => ({ ok: true }));                          
+      130      case 'pe:filtered-count':
+      252 -      // Forwarded from content scripts; popup listens directl
+          -y, so we                                                      
+      253 -      // don't need to re-broadcast. Swallow to avoid "no rece
+          -iver" warnings.                                               
+      131        return Promise.resolve({ ok: true });
+      132    }
+      133  });
+
+● Now update manifest.json to add workers.dev to host_permissions and remove the
+   GitHub OAuth permissions that are no longer needed:
+
+● Update(~/Downloads/PE-YouTube-Filter/manifest.json)
+  ⎿  Added 2 lines, removed 3 lines
+      16    ],
+      17    "host_permissions": [
+      18      "*://*.youtube.com/*",
+      19 -    "*://api.github.com/*",                                    
+      20 -    "*://github.com/*",                                        
+      21 -    "*://raw.githubusercontent.com/*"                          
+      19 +    "*://raw.githubusercontent.com/*",                         
+      20 +    "*://*.workers.dev/*"                                      
+      21    ],
+      22    "background": {
+      23      "scripts": ["background.js"]
+
+● Also remove tabs permission from manifest since it was only needed for the
+  OAuth flow:
+
+● Update(~/Downloads/PE-YouTube-Filter/manifest.json)
+  ⎿  Added 1 line, removed 2 lines
+      11    },
+      12    "permissions": [
+      13      "storage",
+      14 -    "alarms",                                                  
+      15 -    "tabs"                                                     
+      14 +    "alarms"                                                   
+      15    ],
+      16    "host_permissions": [
+      17      "*://*.youtube.com/*",
+
+● Done. Here's what to do to get it running:
+
+  1. Install Wrangler and log in
+  npm install -g wrangler
+  wrangler login
+
+  2. Create the D1 database
+  wrangler d1 create pe-reports
+  Copy the database_id it prints and paste it into wrangler.toml.
+
+  3. Run the schema
+  wrangler d1 execute pe-reports --file=worker/schema.sql
+
+  4. Add your GitHub token as a secret
+
+  Create a fine-grained PAT on GitHub scoped to just PE-YouTube-Filter with
+  Contents (read+write) and Pull requests (write) permissions. Then:
+  wrangler secret put GITHUB_TOKEN
+
+  5. Deploy
+  wrangler deploy
+
+  6. Fill in the worker URL in report.js
+
+  After deploy, Wrangler prints the URL (e.g.
+  https://pe-youtube-filter.yourname.workers.dev). Replace
+  REPLACE_WITH_YOUR_WORKER_URL in report.js with it.
+
+✻ Brewed for 3m 28s

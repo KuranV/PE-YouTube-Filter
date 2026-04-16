@@ -1,0 +1,11 @@
+name = "pe-youtube-filter"
+main = "worker/index.js"
+compatibility_date = "2024-09-23"
+
+[triggers]
+crons = ["0 9 * * *"]  # runs daily at 9:00 UTC
+
+[[d1_databases]]
+binding     = "DB"
+database_name = "pe-reports"
+database_id   = "REPLACE_WITH_YOUR_D1_ID"  # fill in after: wrangler d1 create pe-reports

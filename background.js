@@ -5,10 +5,7 @@
  *   1. On install, seed browser.storage.local with the bundled channels.json.
  *   2. Schedule a weekly refresh from the raw GitHub URL. Respect ETag /
  *      version field to skip no-op updates.
- *   3. Handle the GitHub OAuth Device Flow (start + poll) so the report
- *      page doesn't have to stay open while we wait for the user to enter
- *      the code at github.com/login/device.
- *   4. Relay messages between content scripts and the stored channel list.
+ *   3. Relay messages between content scripts and the stored channel list.
  */
 
 // ---------- CONFIG ----------
@@ -16,8 +13,6 @@
 const REPO_OWNER = 'KuranV';
 const REPO_NAME  = 'PE-YouTube-Filter';
 const CHANNELS_RAW_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/channels.json`;
-const GITHUB_CLIENT_ID = 'Ov23liUf4UJiPEOurMAk';
-const GITHUB_OAUTH_SCOPE = 'public_repo';
 
 const REFRESH_ALARM = 'pe:weekly-refresh';
 const REFRESH_PERIOD_MINUTES = 7 * 24 * 60; // 1 week
@@ -123,139 +118,16 @@ async function refreshChannels() {
   return { updated: true, version: newVersion };
 }
 
-// ---------- GITHUB OAUTH — DEVICE FLOW ----------
-//
-// Flow:
-//   1. POST https://github.com/login/device/code
-//        -> { device_code, user_code, verification_uri, interval, expires_in }
-//      We return user_code + verification_uri to the report page. The user
-//      opens the URI and enters the code.
-//   2. POST https://github.com/login/oauth/access_token (polling every `interval` seconds)
-//        -> { access_token } once the user authorizes
-//        -> or { error: "authorization_pending" | "slow_down" | ... } until then
-//   3. Store the token in browser.storage.local.githubToken.
-//
-// We run the poll loop in the background so it survives the popup closing.
-
-let activeDeviceFlow = null; // { deviceCode, interval, expiresAt, resolve }
-
-async function startDeviceFlow() {
-  // If one is already in progress and not expired, return it.
-  if (activeDeviceFlow && activeDeviceFlow.expiresAt > Date.now()) {
-    return {
-      userCode: activeDeviceFlow.userCode,
-      verificationUri: activeDeviceFlow.verificationUri,
-      expiresAt: activeDeviceFlow.expiresAt
-    };
-  }
-
-  const resp = await fetch('https://github.com/login/device/code', {
-    method: 'POST',
-    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-    body: JSON.stringify({ client_id: GITHUB_CLIENT_ID, scope: GITHUB_OAUTH_SCOPE })
-  });
-  if (!resp.ok) throw new Error(`device code request failed: ${resp.status}`);
-  const data = await resp.json();
-
-  activeDeviceFlow = {
-    deviceCode: data.device_code,
-    userCode: data.user_code,
-    verificationUri: data.verification_uri,
-    interval: Math.max(5, data.interval || 5),
-    expiresAt: Date.now() + (data.expires_in * 1000)
-  };
-
-  // Start polling in the background (does not await).
-  pollForToken().catch((e) => console.warn('[PE] device flow poll error', e));
-
-  return {
-    userCode: activeDeviceFlow.userCode,
-    verificationUri: activeDeviceFlow.verificationUri,
-    expiresAt: activeDeviceFlow.expiresAt
-  };
-}
-
-async function pollForToken() {
-  while (activeDeviceFlow && Date.now() < activeDeviceFlow.expiresAt) {
-    await new Promise(r => setTimeout(r, activeDeviceFlow.interval * 1000));
-    if (!activeDeviceFlow) return;
-
-    let resp;
-    try {
-      resp = await fetch('https://github.com/login/oauth/access_token', {
-        method: 'POST',
-        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          client_id: GITHUB_CLIENT_ID,
-          device_code: activeDeviceFlow.deviceCode,
-          grant_type: 'urn:ietf:params:oauth:grant-type:device_code'
-        })
-      });
-    } catch (err) {
-      continue; // transient network — keep trying
-    }
-
-    let data;
-    try { data = await resp.json(); } catch (_) { continue; }
-
-    if (data.access_token) {
-      // Fetch the username so we can store it alongside the token.
-      let username = null;
-      try {
-        const userResp = await fetch('https://api.github.com/user', {
-          headers: { 'Authorization': `Bearer ${data.access_token}`, 'Accept': 'application/vnd.github+json' }
-        });
-        if (userResp.ok) {
-          const u = await userResp.json();
-          username = u.login;
-        }
-      } catch (_) { /* non-fatal */ }
-
-      await browser.storage.local.set({
-        githubToken: data.access_token,
-        githubUsername: username,
-        githubAuthAt: Date.now()
-      });
-      activeDeviceFlow = null;
-      return { ok: true };
-    }
-
-    if (data.error === 'authorization_pending') continue;
-    if (data.error === 'slow_down') {
-      activeDeviceFlow.interval += 5;
-      continue;
-    }
-    // expired, access_denied, etc. — give up.
-    activeDeviceFlow = null;
-    await browser.storage.local.set({ githubAuthError: data.error || 'unknown' });
-    return { ok: false, error: data.error };
-  }
-  activeDeviceFlow = null;
-}
-
 // ---------- MESSAGE ROUTER ----------
 
-browser.runtime.onMessage.addListener((msg, sender) => {
+browser.runtime.onMessage.addListener((msg) => {
   if (!msg || typeof msg !== 'object') return;
   switch (msg.type) {
     case 'pe:request-channels':
       return browser.storage.local.get('channelList').then(({ channelList }) => ({ list: channelList }));
     case 'pe:refresh-channels':
       return refreshChannels();
-    case 'pe:start-device-flow':
-      return startDeviceFlow();
-    case 'pe:check-auth':
-      return browser.storage.local.get(['githubToken', 'githubUsername']).then(({ githubToken, githubUsername }) => ({
-        authenticated: !!githubToken,
-        username: githubUsername || null
-      }));
-    case 'pe:logout':
-      activeDeviceFlow = null;
-      return browser.storage.local.remove(['githubToken', 'githubUsername', 'githubAuthAt', 'githubAuthError'])
-        .then(() => ({ ok: true }));
     case 'pe:filtered-count':
-      // Forwarded from content scripts; popup listens directly, so we
-      // don't need to re-broadcast. Swallow to avoid "no receiver" warnings.
       return Promise.resolve({ ok: true });
   }
 });
