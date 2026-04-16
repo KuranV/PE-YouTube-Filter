@@ -12,8 +12,8 @@
     'ytd-grid-video-renderer',
     'ytd-reel-item-renderer',
     'ytd-playlist-video-renderer',
-    'ytd-channel-renderer',       // search results for channels
-    'yt-lockup-view-model'        // new sidebar format on watch page
+    'ytd-channel-renderer',
+    'yt-lockup-view-model'
   ];
   const CARD_SELECTOR_LIST = CARD_SELECTORS.join(',');
   const PROCESSED_ATTR = 'data-pe-processed';
@@ -25,8 +25,18 @@
     byId: new Map(),
     byNameLower: new Map(),
     filteredOnPage: 0,
-    lastBadgeChannels: new Set()
+    lastBadgeChannels: new Set(),
+    whitelist: new Set(),       // channelId or channelName.toLowerCase()
+    matchedEntries: new Map(),  // channelKey → { channelName, owner }
   };
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
 
   function loadChannelList(list) {
     state.byId.clear();
@@ -44,20 +54,11 @@
     return m ? m[1] : null;
   }
 
-  /**
-   * Returns ALL channel references on a card — videos can have multiple
-   * creators (collabs) and any one of them being on the block list should
-   * match the whole card.
-   *
-   * Returns an array of { channelId, channelName } objects. Either field
-   * may be null, but at least one will be set per entry.
-   */
   function readCardChannels(card) {
     const results = [];
     const seenIds = new Set();
     const seenNames = new Set();
 
-    // Collect every channel ID on the card.
     const anchors = card.querySelectorAll('a[href*="/channel/"]');
     for (const a of anchors) {
       const id = extractChannelIdFromHref(a.getAttribute('href'));
@@ -67,9 +68,6 @@
       }
     }
 
-    // Collect every channel-name element on the card. ytd-channel-name is
-    // repeated once per creator on collab videos, and ytd-channel-renderer
-    // (search results) uses a slightly different structure.
     const nameEls = card.querySelectorAll(
       '#channel-name yt-formatted-string, #channel-name a, ' +
       'ytd-channel-name a, ytd-channel-name yt-formatted-string, ' +
@@ -83,8 +81,6 @@
       }
     }
 
-    // For ytd-channel-renderer (search result channel cards), the title
-    // sits in #title or #channel-title.
     if (card.tagName && card.tagName.toLowerCase() === 'ytd-channel-renderer') {
       const titleEl = card.querySelector('#title, #channel-title, yt-formatted-string#title');
       if (titleEl) {
@@ -96,9 +92,6 @@
       }
     }
 
-    // For yt-lockup-view-model (new sidebar/playlist format):
-    // - Video cards: channel name is in aria-label="Go to channel <Name>" on the avatar.
-    // - Playlist cards: channel name is the text of an <a href="/@handle"> link.
     if (card.tagName && card.tagName.toLowerCase() === 'yt-lockup-view-model') {
       const avatarEl = card.querySelector('[aria-label^="Go to channel "]');
       if (avatarEl) {
@@ -109,7 +102,6 @@
           results.push({ channelId: null, channelName: name });
         }
       }
-      // Playlist cards expose the channel via a handle link whose text is the name.
       const handleLinks = card.querySelectorAll('a[href^="/@"]');
       for (const a of handleLinks) {
         const name = a.textContent.trim();
@@ -124,6 +116,10 @@
   }
 
   function findMatch(channelId, channelName) {
+    // Skip whitelisted channels
+    if (channelId && state.whitelist.has(channelId)) return null;
+    if (channelName && state.whitelist.has(channelName.toLowerCase())) return null;
+
     if (channelId && state.byId.has(channelId)) return state.byId.get(channelId);
     if (channelName) {
       const entry = state.byNameLower.get(channelName.toLowerCase());
@@ -132,10 +128,6 @@
     return null;
   }
 
-  /**
-   * Check every channel reference on the card and return the first match
-   * we find, or null.
-   */
   function findAnyMatch(card) {
     const refs = readCardChannels(card);
     if (refs.length === 0) return { ready: false, entry: null };
@@ -182,8 +174,6 @@
     }
 
     const { ready, entry } = findAnyMatch(card);
-    // If the card hasn't rendered any channel info yet, don't mark it
-    // processed — the observer should revisit when YouTube fills it in.
     if (!ready) return false;
 
     card.setAttribute(PROCESSED_ATTR, 'true');
@@ -192,6 +182,9 @@
       if (card.hasAttribute(MATCH_ATTR)) clearMatch(card);
       return false;
     }
+
+    const channelKey = entry.channelId || entry.channelName.toLowerCase();
+    state.matchedEntries.set(channelKey, { channelName: entry.channelName, owner: entry.owner });
 
     if (state.mode === 'hide') applyHide(card);
     else if (state.mode === 'label') applyLabel(card, entry);
@@ -216,6 +209,7 @@
   }
 
   function reprocessAll() {
+    state.matchedEntries.clear();
     const cards = document.querySelectorAll(CARD_SELECTOR_LIST);
     for (const card of cards) {
       card.removeAttribute(PROCESSED_ATTR);
@@ -229,7 +223,8 @@
     try {
       browser.runtime.sendMessage({
         type: 'pe:filtered-count',
-        count: state.filteredOnPage
+        count: state.filteredOnPage,
+        channels: [...state.matchedEntries.values()],
       }).catch(() => {});
     } catch (_) {}
   }
@@ -249,9 +244,147 @@
     observer.observe(document.body, { childList: true, subtree: true });
   }
 
+  // ── WHITELIST ────────────────────────────────────────────────────────────────
+
+  async function addToWhitelist(channelKey) {
+    state.whitelist.add(channelKey);
+    const { whitelist = [] } = await browser.storage.local.get('whitelist');
+    if (!whitelist.includes(channelKey)) whitelist.push(channelKey);
+    await browser.storage.local.set({ whitelist });
+    removeChannelPageUI();
+    reprocessAll();
+  }
+
+  async function removeFromWhitelist(channelKey) {
+    state.whitelist.delete(channelKey);
+    const { whitelist = [] } = await browser.storage.local.get('whitelist');
+    await browser.storage.local.set({ whitelist: whitelist.filter(k => k !== channelKey) });
+    reprocessAll();
+    checkChannelPage();
+  }
+
+  // ── CHANNEL PAGE ─────────────────────────────────────────────────────────────
+
+  function isChannelPage() {
+    return /^\/(channel\/UC|@|c\/|user\/)/.test(location.pathname);
+  }
+
+  function extractPageChannelId() {
+    const m = location.pathname.match(/\/channel\/(UC[\w-]{20,})/);
+    return m ? m[1] : null;
+  }
+
+  function extractPageChannelName() {
+    const selectors = [
+      '#channel-name yt-formatted-string',
+      'ytd-channel-name yt-formatted-string',
+      '#page-header yt-dynamic-text-view-model',
+      'h1.ytd-channel-name',
+      '#channel-title-container #text',
+    ];
+    for (const sel of selectors) {
+      const el = document.querySelector(sel);
+      if (el && el.textContent.trim()) return el.textContent.trim();
+    }
+    return null;
+  }
+
+  let channelPageEl = null;
+
+  function removeChannelPageUI() {
+    if (channelPageEl) { channelPageEl.remove(); channelPageEl = null; }
+  }
+
+  function showChannelPageOverlay(entry, channelKey) {
+    removeChannelPageUI();
+    const el = document.createElement('div');
+    el.className = 'pe-channel-page-overlay';
+    el.innerHTML = `
+      <div class="pe-channel-page-panel">
+        <span class="pe-channel-page-badge">Private Equity Owned</span>
+        <h2>${escapeHtml(entry.channelName)}</h2>
+        <p>This channel is owned or managed by <strong>${escapeHtml(entry.owner)}</strong>.</p>
+        ${entry.ownershipType && entry.ownershipType !== 'unknown'
+          ? `<p>Ownership type: <strong>${escapeHtml(entry.ownershipType)}</strong></p>` : ''}
+        <div class="pe-channel-page-actions">
+          <button id="pe-page-back">← Go back</button>
+          <button id="pe-page-show">Show anyway</button>
+        </div>
+        ${entry.source
+          ? `<p class="pe-channel-page-source">Source: <a href="${escapeHtml(entry.source)}" target="_blank" rel="noopener noreferrer">reference</a></p>` : ''}
+      </div>
+    `;
+    el.querySelector('#pe-page-back').addEventListener('click', () => history.back());
+    el.querySelector('#pe-page-show').addEventListener('click', () => addToWhitelist(channelKey));
+    document.body.appendChild(el);
+    channelPageEl = el;
+  }
+
+  function showChannelPageBanner(entry, channelKey) {
+    removeChannelPageUI();
+    const el = document.createElement('div');
+    el.className = 'pe-channel-page-banner';
+    el.innerHTML = `
+      <div class="pe-channel-page-banner-text">
+        <strong>${escapeHtml(entry.channelName)}</strong> is owned by
+        <strong>${escapeHtml(entry.owner)}</strong>.
+        ${entry.source
+          ? `<a href="${escapeHtml(entry.source)}" target="_blank" rel="noopener noreferrer">source</a>` : ''}
+      </div>
+      <button class="pe-banner-btn pe-banner-btn--ignore" id="pe-banner-ignore">Ignore this channel</button>
+      <button class="pe-banner-btn" id="pe-banner-dismiss">✕</button>
+    `;
+    el.querySelector('#pe-banner-ignore').addEventListener('click', () => addToWhitelist(channelKey));
+    el.querySelector('#pe-banner-dismiss').addEventListener('click', () => removeChannelPageUI());
+    document.body.prepend(el);
+    channelPageEl = el;
+  }
+
+  async function checkChannelPage() {
+    if (state.mode === 'off') { removeChannelPageUI(); return; }
+    if (!isChannelPage()) { removeChannelPageUI(); return; }
+
+    // Fast path: channel ID is in the URL
+    const pageId = extractPageChannelId();
+    if (pageId) {
+      const entry = findMatch(pageId, null);
+      if (entry) {
+        if (state.mode === 'hide') showChannelPageOverlay(entry, pageId);
+        else showChannelPageBanner(entry, pageId);
+      } else {
+        removeChannelPageUI();
+      }
+      return;
+    }
+
+    // Slow path: @handle or /c/ URL — wait for the DOM to render the channel name
+    for (const delay of [300, 800, 1500]) {
+      await new Promise(r => setTimeout(r, delay));
+      const name = extractPageChannelName();
+      if (!name) continue;
+      const entry = findMatch(null, name);
+      if (entry) {
+        const channelKey = name.toLowerCase();
+        if (state.mode === 'hide') showChannelPageOverlay(entry, channelKey);
+        else showChannelPageBanner(entry, channelKey);
+      } else {
+        removeChannelPageUI();
+      }
+      return;
+    }
+    removeChannelPageUI();
+  }
+
+  // ── NAVIGATION & OBSERVER ────────────────────────────────────────────────────
+
   document.addEventListener('yt-navigate-finish', () => {
-    setTimeout(() => reprocessAll(), 300);
+    setTimeout(() => {
+      reprocessAll();
+      checkChannelPage();
+    }, 300);
   });
+
+  // ── MESSAGE HANDLER ──────────────────────────────────────────────────────────
 
   browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (!msg || typeof msg !== 'object') return;
@@ -259,26 +392,42 @@
       case 'pe:set-mode':
         state.mode = msg.mode;
         reprocessAll();
-        sendResponse({ ok: true, count: state.filteredOnPage });
+        checkChannelPage();
+        sendResponse({ ok: true, count: state.filteredOnPage, channels: [...state.matchedEntries.values()] });
         return true;
       case 'pe:channels-updated':
         loadChannelList(msg.list);
         reprocessAll();
+        checkChannelPage();
         sendResponse({ ok: true });
         return true;
       case 'pe:get-count':
-        sendResponse({ count: state.filteredOnPage });
+        sendResponse({
+          count: state.filteredOnPage,
+          channels: [...state.matchedEntries.values()],
+        });
         return true;
       case 'pe:context-report':
         sendResponse({ ok: true });
         return true;
+      case 'pe:whitelist-add':
+        addToWhitelist(msg.channelKey).then(() => sendResponse({ ok: true }));
+        return true;
+      case 'pe:whitelist-remove':
+        removeFromWhitelist(msg.channelKey).then(() => sendResponse({ ok: true }));
+        return true;
     }
   });
 
+  // ── INIT ─────────────────────────────────────────────────────────────────────
+
   async function init() {
     try {
-      const stored = await browser.storage.local.get(['mode', 'channelList']);
+      const stored = await browser.storage.local.get(['mode', 'channelList', 'whitelist']);
       state.mode = stored.mode || 'hide';
+      if (stored.whitelist) {
+        for (const key of stored.whitelist) state.whitelist.add(key);
+      }
       if (stored.channelList) {
         loadChannelList(stored.channelList);
       } else {
@@ -290,6 +439,7 @@
     }
     startObserver();
     scan(true);
+    checkChannelPage();
   }
 
   if (document.readyState === 'loading') {

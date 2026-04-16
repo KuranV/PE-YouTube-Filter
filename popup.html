@@ -48,14 +48,123 @@
       opacity: 0.75;
       margin-top: 2px;
     }
-    .counter {
+
+    /* Counter — clickable when there are filtered channels */
+    .counter-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
       padding: 8px 10px;
       background: #f2f2f2;
+      border: none;
       border-radius: 4px;
-      margin-bottom: 10px;
+      margin-bottom: 4px;
+      font: inherit;
       font-size: 12px;
+      color: inherit;
+      cursor: default;
+      text-align: left;
     }
-    .counter strong { font-weight: 600; }
+    .counter-btn.has-channels {
+      cursor: pointer;
+    }
+    .counter-btn.has-channels:hover { background: #e8e8e8; }
+    .counter-btn strong { font-weight: 600; }
+    .counter-arrow { font-size: 10px; color: #888; transition: transform 0.15s; }
+    .counter-arrow.open { transform: rotate(180deg); }
+
+    /* Filtered channels list */
+    .channel-list {
+      margin-bottom: 10px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .channel-list-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .channel-list-item:last-child { border-bottom: none; }
+    .channel-list-info { flex: 1; min-width: 0; }
+    .channel-list-name {
+      font-weight: 600;
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .channel-list-owner {
+      font-size: 10px;
+      color: #666;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ignore-btn {
+      flex-shrink: 0;
+      font: inherit;
+      font-size: 10px;
+      padding: 3px 7px;
+      border: 1px solid #c81e1e;
+      background: #fff;
+      color: #c81e1e;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    .ignore-btn:hover { background: #fff0f0; }
+
+    /* Whitelist section */
+    .whitelist-toggle {
+      font: inherit;
+      font-size: 11px;
+      color: #888;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      margin-bottom: 10px;
+      text-decoration: underline;
+    }
+    .whitelist-toggle:hover { color: #555; }
+    .whitelist-list {
+      margin-bottom: 10px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .whitelist-empty {
+      padding: 8px 10px;
+      font-size: 11px;
+      color: #999;
+      text-align: center;
+    }
+    .whitelist-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 11px;
+    }
+    .whitelist-item:last-child { border-bottom: none; }
+    .whitelist-item-key { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #444; }
+    .unignore-btn {
+      flex-shrink: 0;
+      font: inherit;
+      font-size: 10px;
+      padding: 3px 7px;
+      border: 1px solid #ccc;
+      background: #f7f7f7;
+      color: #333;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    .unignore-btn:hover { background: #ececec; }
+
     .report-btn {
       display: block;
       width: 100%;
@@ -110,7 +219,15 @@
     </button>
   </div>
 
-  <div class="counter"><strong id="count">0</strong> channels filtered on this page</div>
+  <button class="counter-btn" id="counter-btn" aria-expanded="false">
+    <span><strong id="count">0</strong> channels filtered on this page</span>
+    <span class="counter-arrow" id="counter-arrow">▼</span>
+  </button>
+
+  <div id="channel-list" class="channel-list" hidden></div>
+
+  <button class="whitelist-toggle" id="whitelist-toggle" hidden>Ignored channels (<span id="whitelist-count">0</span>)</button>
+  <div id="whitelist-list" class="whitelist-list" hidden></div>
 
   <button class="report-btn" id="report-btn">Report a channel</button>
 
