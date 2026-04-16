@@ -1,6 +1,6 @@
 /* PE YouTube Filter — report form */
 
-const WORKER_URL = 'REPLACE_WITH_YOUR_WORKER_URL'; // e.g. https://pe-youtube-filter.yourname.workers.dev
+const WORKER_URL = 'https://pe-youtube-filter.pe-yt-filter.workers.dev';
 
 const form       = document.getElementById('report-form');
 const submitBtn  = document.getElementById('submit-btn');
