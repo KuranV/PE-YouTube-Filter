@@ -5,6 +5,9 @@
 (() => {
   'use strict';
 
+  /* Chrome/Firefox compat */
+  const browser = globalThis.browser || globalThis.chrome;
+
   const CARD_SELECTORS = [
     'ytd-rich-item-renderer',
     'ytd-video-renderer',

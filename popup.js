@@ -1,4 +1,5 @@
 /* PE YouTube Filter — popup logic */
+if (typeof browser === 'undefined') var browser = chrome;
 
 const $ = (sel) => document.querySelector(sel);
 const modeButtons = document.querySelectorAll('.mode-btn');

@@ -1,4 +1,5 @@
 /* PE YouTube Filter — report form */
+if (typeof browser === 'undefined') var browser = chrome;
 
 const WORKER_URL = 'https://pe-youtube-filter.pe-yt-filter.workers.dev';
 

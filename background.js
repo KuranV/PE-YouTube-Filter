@@ -1,3 +1,6 @@
+/* Chrome/Firefox compat */
+if (typeof browser === 'undefined') var browser = chrome; // eslint-disable-line no-use-before-define
+
 /*
  * PE YouTube Filter — background (non-persistent event page)
  *
