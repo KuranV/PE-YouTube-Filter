@@ -28,3 +28,6 @@ For a permanent install, load it through `about:addons` as an unsigned extension
 ## Reporting a channel
 
 If you find a channel that should be on the list, use the *Report a channel* button in the popup. It opens a small form — fill in what you know and submit it.
+
+
+## Feel free to contribute / create issues
