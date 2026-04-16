@@ -12,16 +12,11 @@
  */
 
 // ---------- CONFIG ----------
-// Edit these two to point at your fork of the channel repo. The extension
-// will fetch channels.json from the raw URL and submit reports as issues
-// against the same repo.
-const REPO_OWNER = 'REPLACE_ME_OWNER';
-const REPO_NAME  = 'REPLACE_ME_REPO';
-const CHANNELS_RAW_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/channels.json`;
 
-// GitHub OAuth client_id for the Device Flow app. Device Flow doesn't use a
-// client secret, so this is safe to ship in the extension source.
-const GITHUB_CLIENT_ID = 'REPLACE_ME_GITHUB_OAUTH_CLIENT_ID';
+const REPO_OWNER = 'KuranV';
+const REPO_NAME  = 'PE-YouTube-Filter';
+const CHANNELS_RAW_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/channels.json`;
+const GITHUB_CLIENT_ID = 'Ov23liUf4UJiPEOurMAk';
 const GITHUB_OAUTH_SCOPE = 'public_repo';
 
 const REFRESH_ALARM = 'pe:weekly-refresh';
