@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>PE YouTube Filter</title>
+  <style>
+    body {
+      width: 280px;
+      margin: 0;
+      padding: 14px 14px 10px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 13px;
+      color: #1c1c1c;
+      background: #fff;
+    }
+    h1 {
+      font-size: 14px;
+      margin: 0 0 10px;
+      font-weight: 600;
+    }
+    .modes {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+    .mode-btn {
+      padding: 8px 10px;
+      border: 1px solid #ccc;
+      background: #f7f7f7;
+      border-radius: 4px;
+      cursor: pointer;
+      text-align: left;
+      font: inherit;
+      color: inherit;
+      transition: background 0.1s, border-color 0.1s;
+    }
+    .mode-btn:hover { background: #ececec; }
+    .mode-btn.active {
+      background: #c81e1e;
+      color: #fff;
+      border-color: #a61717;
+    }
+    .mode-btn .mode-label { font-weight: 600; }
+    .mode-btn .mode-hint {
+      display: block;
+      font-size: 11px;
+      opacity: 0.75;
+      margin-top: 2px;
+    }
+    .counter {
+      padding: 8px 10px;
+      background: #f2f2f2;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      font-size: 12px;
+    }
+    .counter strong { font-weight: 600; }
+    .report-btn {
+      display: block;
+      width: 100%;
+      padding: 9px 10px;
+      border: 1px solid #c81e1e;
+      background: #fff;
+      color: #c81e1e;
+      border-radius: 4px;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 600;
+      transition: background 0.1s;
+    }
+    .report-btn:hover { background: #fff0f0; }
+    footer {
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid #eee;
+      font-size: 10px;
+      color: #888;
+      text-align: center;
+    }
+    .refresh-link {
+      font-size: 10px;
+      color: #555;
+      text-decoration: underline;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      margin: 0;
+      font-family: inherit;
+    }
+    .refresh-link:hover { color: #c81e1e; }
+  </style>
+</head>
+<body>
+  <h1>PE YouTube Filter</h1>
+
+  <div class="modes" role="radiogroup" aria-label="Display mode">
+    <button class="mode-btn" data-mode="hide" role="radio">
+      <span class="mode-label">Hide entirely</span>
+      <span class="mode-hint">Remove matching cards from the page</span>
+    </button>
+    <button class="mode-btn" data-mode="label" role="radio">
+      <span class="mode-label">Show with label</span>
+      <span class="mode-hint">Tag matching cards with the owner name</span>
+    </button>
+    <button class="mode-btn" data-mode="off" role="radio">
+      <span class="mode-label">Show normally</span>
+      <span class="mode-hint">Disable filtering on this session</span>
+    </button>
+  </div>
+
+  <div class="counter"><strong id="count">0</strong> channels filtered on this page</div>
+
+  <button class="report-btn" id="report-btn">Report a channel</button>
+
+  <footer>
+    Channel list auto-updated weekly from GitHub &middot;
+    <button class="refresh-link" id="refresh-btn" type="button">refresh now</button>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

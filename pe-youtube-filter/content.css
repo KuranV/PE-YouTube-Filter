@@ -1,0 +1,22 @@
+/* PE YouTube Filter — injected styles */
+
+.pe-filter-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 2000;
+  padding: 3px 7px;
+  font-family: Roboto, "Segoe UI", Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #fff;
+  background: rgba(200, 30, 30, 0.92);
+  border-radius: 3px;
+  pointer-events: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  max-width: calc(100% - 12px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
