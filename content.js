@@ -325,23 +325,62 @@
     removeChannelPageUI();
     const el = document.createElement('div');
     el.className = 'pe-channel-page-overlay';
-    el.innerHTML = `
-      <div class="pe-channel-page-panel">
-        <span class="pe-channel-page-badge">Private Equity Owned</span>
-        <h2>${escapeHtml(entry.channelName)}</h2>
-        <p>This channel is owned or managed by <strong>${escapeHtml(entry.owner)}</strong>.</p>
-        ${entry.ownershipType && entry.ownershipType !== 'unknown'
-          ? `<p>Ownership type: <strong>${escapeHtml(entry.ownershipType)}</strong></p>` : ''}
-        <div class="pe-channel-page-actions">
-          <button id="pe-page-back">← Go back</button>
-          <button id="pe-page-show">Show anyway</button>
-        </div>
-        ${entry.source
-          ? `<p class="pe-channel-page-source">Source: <a href="${escapeHtml(entry.source)}" target="_blank" rel="noopener noreferrer">reference</a></p>` : ''}
-      </div>
-    `;
-    el.querySelector('#pe-page-back').addEventListener('click', () => history.back());
-    el.querySelector('#pe-page-show').addEventListener('click', () => addToWhitelist(channelKey));
+
+    const panel = document.createElement('div');
+    panel.className = 'pe-channel-page-panel';
+
+    const badge = document.createElement('span');
+    badge.className = 'pe-channel-page-badge';
+    badge.textContent = 'Private Equity Owned';
+
+    const h2 = document.createElement('h2');
+    h2.textContent = entry.channelName;
+
+    const p1 = document.createElement('p');
+    p1.append('This channel is owned or managed by ');
+    const strong1 = document.createElement('strong');
+    strong1.textContent = entry.owner;
+    p1.appendChild(strong1);
+    p1.append('.');
+
+    panel.append(badge, h2, p1);
+
+    if (entry.ownershipType && entry.ownershipType !== 'unknown') {
+      const p2 = document.createElement('p');
+      p2.append('Ownership type: ');
+      const strong2 = document.createElement('strong');
+      strong2.textContent = entry.ownershipType;
+      p2.appendChild(strong2);
+      panel.appendChild(p2);
+    }
+
+    const actions = document.createElement('div');
+    actions.className = 'pe-channel-page-actions';
+    const backBtn = document.createElement('button');
+    backBtn.id = 'pe-page-back';
+    backBtn.textContent = '← Go back';
+    const showBtn = document.createElement('button');
+    showBtn.id = 'pe-page-show';
+    showBtn.textContent = 'Show anyway';
+    actions.append(backBtn, showBtn);
+    panel.appendChild(actions);
+
+    if (entry.source) {
+      const src = document.createElement('p');
+      src.className = 'pe-channel-page-source';
+      src.append('Source: ');
+      const a = document.createElement('a');
+      a.href = entry.source;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.textContent = 'reference';
+      src.appendChild(a);
+      panel.appendChild(src);
+    }
+
+    el.appendChild(panel);
+    backBtn.addEventListener('click', () => history.back());
+    showBtn.addEventListener('click', () => addToWhitelist(channelKey));
     document.body.appendChild(el);
     channelPageEl = el;
   }
@@ -350,18 +389,34 @@
     removeChannelPageUI();
     const el = document.createElement('div');
     el.className = 'pe-channel-page-banner';
-    el.innerHTML = `
-      <div class="pe-channel-page-banner-text">
-        <strong>${escapeHtml(entry.channelName)}</strong> is owned by
-        <strong>${escapeHtml(entry.owner)}</strong>.
-        ${entry.source
-          ? `<a href="${escapeHtml(entry.source)}" target="_blank" rel="noopener noreferrer">source</a>` : ''}
-      </div>
-      <button class="pe-banner-btn pe-banner-btn--ignore" id="pe-banner-ignore">Ignore this channel</button>
-      <button class="pe-banner-btn" id="pe-banner-dismiss">✕</button>
-    `;
-    el.querySelector('#pe-banner-ignore').addEventListener('click', () => addToWhitelist(channelKey));
-    el.querySelector('#pe-banner-dismiss').addEventListener('click', () => removeChannelPageUI());
+
+    const text = document.createElement('div');
+    text.className = 'pe-channel-page-banner-text';
+    const s1 = document.createElement('strong');
+    s1.textContent = entry.channelName;
+    const s2 = document.createElement('strong');
+    s2.textContent = entry.owner;
+    text.append(s1, ' is owned by ', s2, '.');
+    if (entry.source) {
+      const a = document.createElement('a');
+      a.href = entry.source;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.textContent = 'source';
+      text.appendChild(a);
+    }
+
+    const ignoreBtn = document.createElement('button');
+    ignoreBtn.className = 'pe-banner-btn pe-banner-btn--ignore';
+    ignoreBtn.textContent = 'Ignore this channel';
+
+    const dismissBtn = document.createElement('button');
+    dismissBtn.className = 'pe-banner-btn';
+    dismissBtn.textContent = '✕';
+
+    el.append(text, ignoreBtn, dismissBtn);
+    ignoreBtn.addEventListener('click', () => addToWhitelist(channelKey));
+    dismissBtn.addEventListener('click', () => removeChannelPageUI());
     document.body.prepend(el);
     channelPageEl = el;
   }

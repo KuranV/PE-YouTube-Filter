@@ -47,15 +47,24 @@ function renderChannelListItems() {
   for (const ch of currentChannels) {
     const item = document.createElement('div');
     item.className = 'channel-list-item';
-    item.innerHTML = `
-      <div class="channel-list-info">
-        <div class="channel-list-name">${escapeHtml(ch.channelName)}</div>
-        <div class="channel-list-owner">${escapeHtml(ch.owner)}</div>
-      </div>
-      <button class="ignore-btn">Ignore</button>
-    `;
+
+    const info = document.createElement('div');
+    info.className = 'channel-list-info';
+    const nameEl = document.createElement('div');
+    nameEl.className = 'channel-list-name';
+    nameEl.textContent = ch.channelName;
+    const ownerEl = document.createElement('div');
+    ownerEl.className = 'channel-list-owner';
+    ownerEl.textContent = ch.owner;
+    info.append(nameEl, ownerEl);
+
+    const ignoreBtn = document.createElement('button');
+    ignoreBtn.className = 'ignore-btn';
+    ignoreBtn.textContent = 'Ignore';
+    item.append(info, ignoreBtn);
+
     const key = ch.channelName.toLowerCase();
-    item.querySelector('.ignore-btn').addEventListener('click', async () => {
+    ignoreBtn.addEventListener('click', async () => {
       if (activeTabId) {
         await browser.tabs.sendMessage(activeTabId, { type: 'pe:whitelist-add', channelKey: key }).catch(() => {});
       }
@@ -85,17 +94,26 @@ async function refreshWhitelist() {
 function renderWhitelistItems(whitelist) {
   whitelistListEl.innerHTML = '';
   if (whitelist.length === 0) {
-    whitelistListEl.innerHTML = '<div class="whitelist-empty">No ignored channels</div>';
+    const empty = document.createElement('div');
+    empty.className = 'whitelist-empty';
+    empty.textContent = 'No ignored channels';
+    whitelistListEl.appendChild(empty);
     return;
   }
   for (const key of whitelist) {
     const item = document.createElement('div');
     item.className = 'whitelist-item';
-    item.innerHTML = `
-      <span class="whitelist-item-key">${escapeHtml(key)}</span>
-      <button class="unignore-btn">Unignore</button>
-    `;
-    item.querySelector('.unignore-btn').addEventListener('click', async () => {
+
+    const keyEl = document.createElement('span');
+    keyEl.className = 'whitelist-item-key';
+    keyEl.textContent = key;
+
+    const unignoreBtn = document.createElement('button');
+    unignoreBtn.className = 'unignore-btn';
+    unignoreBtn.textContent = 'Unignore';
+    item.append(keyEl, unignoreBtn);
+
+    unignoreBtn.addEventListener('click', async () => {
       if (activeTabId) {
         await browser.tabs.sendMessage(activeTabId, { type: 'pe:whitelist-remove', channelKey: key }).catch(() => {});
       }
