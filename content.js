@@ -12,7 +12,8 @@
     'ytd-grid-video-renderer',
     'ytd-reel-item-renderer',
     'ytd-playlist-video-renderer',
-    'ytd-channel-renderer'        // <-- NEW: search results for channels
+    'ytd-channel-renderer',       // search results for channels
+    'yt-lockup-view-model'        // new sidebar format on watch page
   ];
   const CARD_SELECTOR_LIST = CARD_SELECTORS.join(',');
   const PROCESSED_ATTR = 'data-pe-processed';
@@ -88,6 +89,20 @@
       const titleEl = card.querySelector('#title, #channel-title, yt-formatted-string#title');
       if (titleEl) {
         const name = titleEl.textContent.trim();
+        if (name && !seenNames.has(name.toLowerCase())) {
+          seenNames.add(name.toLowerCase());
+          results.push({ channelId: null, channelName: name });
+        }
+      }
+    }
+
+    // For yt-lockup-view-model (new sidebar format on watch page), the channel
+    // name is in the aria-label of the avatar button: "Go to channel <Name>".
+    if (card.tagName && card.tagName.toLowerCase() === 'yt-lockup-view-model') {
+      const avatarEl = card.querySelector('[aria-label^="Go to channel "]');
+      if (avatarEl) {
+        const label = avatarEl.getAttribute('aria-label');
+        const name = label.replace(/^Go to channel\s+/, '').trim();
         if (name && !seenNames.has(name.toLowerCase())) {
           seenNames.add(name.toLowerCase());
           results.push({ channelId: null, channelName: name });
