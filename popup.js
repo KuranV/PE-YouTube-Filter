@@ -225,4 +225,10 @@ browser.runtime.onMessage.addListener((msg) => {
   }
 });
 
+document.getElementById('kofi-link').addEventListener('click', (e) => {
+  e.preventDefault();
+  browser.tabs.create({ url: 'https://buymeacoffee.com/flar' });
+  window.close();
+});
+
 init();
