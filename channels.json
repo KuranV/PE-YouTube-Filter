@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "updated": "2026-04-16",
   "channels": [
     {
@@ -8,161 +8,332 @@
       "owner": "Electrify Video Partners",
       "ownershipType": "majority",
       "reportCount": 0,
-      "source": "https://www.youtube.com/watch?v=ZoibAbdQf58",
+      "source": "https://www.electrify.video/",
       "dateAdded": "2025-01-01"
     },
-        {
+    {
       "channelName": "Veritasium en español",
       "channelId": "UCXtxgWwk55kVJo9lCCZRdmg",
       "owner": "Electrify Video Partners",
       "ownershipType": "majority",
       "reportCount": 0,
-      "source": "",
+      "source": "https://www.electrify.video/",
       "dateAdded": "2025-01-01"
     },
     {
       "channelName": "Fireship",
       "channelId": "UCsBjURrPoezykLs9EqgamOA",
       "owner": "Electrify Video Partners",
-      "ownershipType": "unknown",
+      "ownershipType": "minority",
       "reportCount": 0,
-      "source": "",
+      "source": "https://www.electrify.video/",
       "dateAdded": "2025-01-01"
     },
     {
       "channelName": "Simple History",
       "channelId": "UC510QYlOlKNyhy_zdQxnGYw",
       "owner": "Electrify Video Partners",
-      "ownershipType": "unknown",
+      "ownershipType": "minority",
       "reportCount": 0,
-      "source": "",
+      "source": "https://www.electrify.video/",
       "dateAdded": "2025-01-01"
     },
     {
       "channelName": "Improvement Pill",
       "channelId": "UCBIt1VN5j37PVM8LLSuTTlw",
       "owner": "Electrify Video Partners",
-      "ownershipType": "unknown",
+      "ownershipType": "minority",
       "reportCount": 0,
-      "source": "",
+      "source": "https://www.electrify.video/",
       "dateAdded": "2025-01-01"
     },
     {
-      "channelName": "Fern",
+      "channelName": "fern",
       "channelId": "UCyHDQ5C6z1NDmJ4g6SerW8g",
       "owner": "Electrify Video Partners",
-      "ownershipType": "unknown",
+      "ownershipType": "minority",
       "reportCount": 0,
-      "source": "",
+      "source": "https://www.electrify.video/",
       "dateAdded": "2025-01-01"
     },
     {
       "channelName": "Astrum",
       "channelId": "UCVRQ_VIgdE8eDAfrd4EgP-w",
       "owner": "Electrify Video Partners",
-      "ownershipType": "unknown",
+      "ownershipType": "minority",
       "reportCount": 0,
-      "source": "",
+      "source": "https://www.electrify.video/",
       "dateAdded": "2025-01-01"
     },
     {
       "channelName": "Mentour Pilot",
       "channelId": "UCwpHKudUkP5tNgmMdexB3ow",
       "owner": "Electrify Video Partners",
-      "ownershipType": "unknown",
+      "ownershipType": "minority",
       "reportCount": 0,
-      "source": "",
+      "source": "https://www.electrify.video/post/electrify-video-partners-expands-portfolio-with-mentour-pilot-and-mentour-now-investment",
       "dateAdded": "2025-01-01"
     },
     {
-      "channelName": "Spitbrix",
+      "channelName": "Mentour Now",
       "channelId": "",
       "owner": "Electrify Video Partners",
-      "ownershipType": "unknown",
+      "ownershipType": "minority",
       "reportCount": 0,
-      "source": "",
+      "source": "https://www.electrify.video/post/electrify-video-partners-expands-portfolio-with-mentour-pilot-and-mentour-now-investment",
+      "dateAdded": "2026-04-16"
+    },
+    {
+      "channelName": "SpitBrix",
+      "channelId": "",
+      "owner": "Electrify Video Partners",
+      "ownershipType": "minority",
+      "reportCount": 0,
+      "source": "https://www.electrify.video/",
       "dateAdded": "2025-01-01"
     },
     {
       "channelName": "Simplicissimus",
       "channelId": "UCoTzlJ27FbJbYtzkn_cVp9A",
       "owner": "Electrify Video Partners",
-      "ownershipType": "unknown",
+      "ownershipType": "minority",
       "reportCount": 0,
-      "source": "",
+      "source": "https://www.electrify.video/",
       "dateAdded": "2025-01-01"
     },
     {
       "channelName": "Unfassbar",
       "channelId": "",
       "owner": "Electrify Video Partners",
-      "ownershipType": "unknown",
+      "ownershipType": "minority",
       "reportCount": 0,
-      "source": "",
+      "source": "https://www.electrify.video/",
       "dateAdded": "2025-01-01"
     },
     {
       "channelName": "The Game Theorists",
       "channelId": "UCo_IB5145EVNcf8hw1Kku7w",
       "owner": "Lunar X",
-      "ownershipType": "unknown",
+      "ownershipType": "full",
       "reportCount": 0,
-      "source": "",
+      "source": "https://www.tubefilter.com/2022/12/20/theorist-media-acquired-by-lunar-x/",
       "dateAdded": "2025-01-01"
     },
     {
       "channelName": "The Film Theorists",
       "channelId": "UC3sznuotAs2ohg_U__Jzj_Q",
       "owner": "Lunar X",
-      "ownershipType": "unknown",
+      "ownershipType": "full",
       "reportCount": 0,
-      "source": "",
+      "source": "https://www.tubefilter.com/2022/12/20/theorist-media-acquired-by-lunar-x/",
       "dateAdded": "2025-01-01"
     },
     {
       "channelName": "The Food Theorists",
       "channelId": "UCHdMK5Ef2El9KZBm9yMm1NA",
       "owner": "Lunar X",
-      "ownershipType": "unknown",
+      "ownershipType": "full",
       "reportCount": 0,
-      "source": "",
+      "source": "https://www.tubefilter.com/2022/12/20/theorist-media-acquired-by-lunar-x/",
       "dateAdded": "2025-01-01"
     },
     {
       "channelName": "The Style Theorists",
       "channelId": "UCGvn5DBP4uT0aul1y6nf5og",
       "owner": "Lunar X",
-      "ownershipType": "unknown",
+      "ownershipType": "full",
       "reportCount": 0,
-      "source": "",
+      "source": "https://www.tubefilter.com/2022/12/20/theorist-media-acquired-by-lunar-x/",
       "dateAdded": "2025-01-01"
     },
     {
       "channelName": "GTLive",
       "channelId": "UC5fdssPqmmGhkhsJi4VcckA",
       "owner": "Lunar X",
-      "ownershipType": "unknown",
+      "ownershipType": "full",
       "reportCount": 0,
-      "source": "",
+      "source": "https://www.tubefilter.com/2022/12/20/theorist-media-acquired-by-lunar-x/",
       "dateAdded": "2025-01-01"
+    },
+    {
+      "channelName": "Economics Explained",
+      "channelId": "UCZ4AMrDcNrfy3X6nsU8-rPg",
+      "owner": "Lunar X",
+      "ownershipType": "full",
+      "reportCount": 0,
+      "source": "https://lunar-x.com/about/",
+      "dateAdded": "2026-04-16"
+    },
+    {
+      "channelName": "Gigglebellies",
+      "channelId": "",
+      "owner": "Lunar X",
+      "ownershipType": "minority",
+      "reportCount": 0,
+      "source": "https://lunar-x.com/about/",
+      "dateAdded": "2026-04-16"
+    },
+    {
+      "channelName": "Groovy The Martian",
+      "channelId": "",
+      "owner": "Lunar X",
+      "ownershipType": "minority",
+      "reportCount": 0,
+      "source": "https://lunar-x.com/about/",
+      "dateAdded": "2026-04-16"
+    },
+    {
+      "channelName": "SuperZoo",
+      "channelId": "",
+      "owner": "Lunar X",
+      "ownershipType": "minority",
+      "reportCount": 0,
+      "source": "https://lunar-x.com/about/",
+      "dateAdded": "2026-04-16"
+    },
+    {
+      "channelName": "Cocomelon - Nursery Rhymes",
+      "channelId": "UCbCmjCuTUZos6Inko4u57UQ",
+      "owner": "Moonbug Entertainment (Candle Media / Blackstone)",
+      "ownershipType": "full",
+      "reportCount": 0,
+      "source": "https://variety.com/2021/digital/news/cocomelon-moonbug-entertainment-sale-blackstone-kevin-mayer-tom-staggs-1235104224/",
+      "dateAdded": "2025-01-01"
+    },
+    {
+      "channelName": "Blippi - Educational Videos for Kids",
+      "channelId": "",
+      "owner": "Moonbug Entertainment (Candle Media / Blackstone)",
+      "ownershipType": "full",
+      "reportCount": 0,
+      "source": "https://www.prnewswire.com/news-releases/moonbug-entertainment-acquires-youtube-sensations-cocomelon-and-blippi-to-become-worlds-largest-digital-kids-media-company-301103216.html",
+      "dateAdded": "2026-04-16"
+    },
+    {
+      "channelName": "Little Baby Bum - Nursery Rhymes & Kids Songs",
+      "channelId": "",
+      "owner": "Moonbug Entertainment (Candle Media / Blackstone)",
+      "ownershipType": "full",
+      "reportCount": 0,
+      "source": "https://www.moonbug.com/",
+      "dateAdded": "2026-04-16"
+    },
+    {
+      "channelName": "Little Angel: Kids Song And Nursery Rhymes",
+      "channelId": "",
+      "owner": "Moonbug Entertainment (Candle Media / Blackstone)",
+      "ownershipType": "full",
+      "reportCount": 0,
+      "source": "https://variety.com/2022/digital/news/moonbug-cocomelon-acquires-little-angel-1235175796/",
+      "dateAdded": "2026-04-16"
+    },
+    {
+      "channelName": "Gecko's Garage - Trucks For Children",
+      "channelId": "",
+      "owner": "Moonbug Entertainment (Candle Media / Blackstone)",
+      "ownershipType": "full",
+      "reportCount": 0,
+      "source": "https://www.moonbug.com/",
+      "dateAdded": "2026-04-16"
+    },
+    {
+      "channelName": "Oddbods",
+      "channelId": "",
+      "owner": "Moonbug Entertainment (Candle Media / Blackstone)",
+      "ownershipType": "full",
+      "reportCount": 0,
+      "source": "https://www.moonbug.com/",
+      "dateAdded": "2026-04-16"
     },
     {
       "channelName": "Donut Media",
       "channelId": "UCL4m2wKAnf0qgl8_8RxVsJg",
       "owner": "Recurrent Ventures (backed by Blackstone)",
-      "ownershipType": "unknown",
+      "ownershipType": "full",
       "reportCount": 0,
-      "source": "",
+      "source": "https://peq42.com/blog/list-of-youtube-channels-owned-by-private-equity/",
       "dateAdded": "2025-01-01"
     },
     {
-      "channelName": "Cocomelon - Nursery Rhymes",
-      "channelId": "UCbCmjCuTUZos6Inko4u57UQ",
-      "owner": "Candle Media (backed by Blackstone) / Moonbug Entertainment",
+      "channelName": "The Drive",
+      "channelId": "",
+      "owner": "Recurrent Ventures (backed by Blackstone)",
       "ownershipType": "full",
       "reportCount": 0,
-      "source": "",
-      "dateAdded": "2025-01-01"
+      "source": "https://peq42.com/blog/list-of-youtube-channels-owned-by-private-equity/",
+      "dateAdded": "2026-04-16"
+    },
+    {
+      "channelName": "Task & Purpose",
+      "channelId": "",
+      "owner": "Recurrent Ventures (backed by Blackstone)",
+      "ownershipType": "full",
+      "reportCount": 0,
+      "source": "https://peq42.com/blog/list-of-youtube-channels-owned-by-private-equity/",
+      "dateAdded": "2026-04-16"
+    },
+    {
+      "channelName": "Real Stories",
+      "channelId": "",
+      "owner": "Little Dot Studios (All3Media / RedBird IMI)",
+      "ownershipType": "full",
+      "reportCount": 0,
+      "source": "https://www.littledotstudios.com/en-us/channels",
+      "dateAdded": "2026-04-16"
+    },
+    {
+      "channelName": "Real Crime",
+      "channelId": "",
+      "owner": "Little Dot Studios (All3Media / RedBird IMI)",
+      "ownershipType": "full",
+      "reportCount": 0,
+      "source": "https://www.littledotstudios.com/en-us/channels",
+      "dateAdded": "2026-04-16"
+    },
+    {
+      "channelName": "Real Wild",
+      "channelId": "",
+      "owner": "Little Dot Studios (All3Media / RedBird IMI)",
+      "ownershipType": "full",
+      "reportCount": 0,
+      "source": "https://www.littledotstudios.com/en-us/channels",
+      "dateAdded": "2026-04-16"
+    },
+    {
+      "channelName": "History Hit",
+      "channelId": "",
+      "owner": "Little Dot Studios (All3Media / RedBird IMI)",
+      "ownershipType": "full",
+      "reportCount": 0,
+      "source": "https://www.littledotstudios.com/en-us/channels",
+      "dateAdded": "2026-04-16"
+    },
+    {
+      "channelName": "Wonder",
+      "channelId": "",
+      "owner": "Little Dot Studios (All3Media / RedBird IMI)",
+      "ownershipType": "full",
+      "reportCount": 0,
+      "source": "https://www.littledotstudios.com/en-us/channels",
+      "dateAdded": "2026-04-16"
+    },
+    {
+      "channelName": "FBE",
+      "channelId": "",
+      "owner": "ZATV (Brat TV / Electric Monster)",
+      "ownershipType": "full",
+      "reportCount": 0,
+      "source": "https://variety.com/2021/digital/news/react-media-acquired-electronic-monster-1235114834/",
+      "dateAdded": "2026-04-16"
+    },
+    {
+      "channelName": "Kids Learning Tube",
+      "channelId": "",
+      "owner": "ZATV (Brat TV / Electric Monster)",
+      "ownershipType": "full",
+      "reportCount": 0,
+      "source": "https://peq42.com/blog/list-of-youtube-channels-owned-by-private-equity/",
+      "dateAdded": "2026-04-16"
     }
   ]
 }
