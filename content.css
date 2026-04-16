@@ -20,3 +20,92 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* Full-page overlay shown when the user navigates to a flagged channel page
+   in "hide" mode. Sits above YouTube's own UI. */
+.pe-channel-page-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: rgba(15, 15, 15, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  font-family: Roboto, "Segoe UI", Arial, sans-serif;
+}
+.pe-channel-page-panel {
+  background: #fff;
+  color: #111;
+  border-radius: 8px;
+  max-width: 460px;
+  width: 100%;
+  padding: 28px 32px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+.pe-channel-page-panel h2 {
+  margin: 8px 0 10px;
+  font-size: 20px;
+  font-weight: 600;
+}
+.pe-channel-page-panel p { margin: 8px 0; font-size: 14px; line-height: 1.5; }
+.pe-channel-page-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  background: #c81e1e;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 3px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.pe-channel-page-actions {
+  margin-top: 18px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+.pe-channel-page-actions button {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 9px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  background: #f7f7f7;
+  color: #222;
+}
+.pe-channel-page-actions button:hover { background: #ececec; }
+.pe-channel-page-actions #pe-page-back {
+  background: #c81e1e;
+  border-color: #a61717;
+  color: #fff;
+}
+.pe-channel-page-actions #pe-page-back:hover { background: #a61717; }
+.pe-channel-page-source {
+  margin-top: 14px;
+  font-size: 12px;
+  color: #666;
+}
+.pe-channel-page-source a { color: #c81e1e; text-decoration: underline; }
+
+/* Inline banner shown in "label" mode above the channel page content. */
+.pe-channel-page-banner {
+  position: sticky;
+  top: 0;
+  z-index: 99998;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: #fff4f4;
+  border-bottom: 2px solid #c81e1e;
+  color: #1c1c1c;
+  font-family: Roboto, "Segoe UI", Arial, sans-serif;
+  font-size: 13px;
+}
+.pe-channel-page-banner-text { flex: 1; }

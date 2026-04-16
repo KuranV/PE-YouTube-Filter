@@ -9,7 +9,8 @@
 (() => {
   'use strict';
 
-  const CARD_SELECTORS = [
+  // Video card containers — one video per match.
+  const VIDEO_CARD_SELECTORS = [
     'ytd-rich-item-renderer',
     'ytd-video-renderer',
     'ytd-compact-video-renderer',
@@ -17,7 +18,17 @@
     'ytd-reel-item-renderer',
     'ytd-playlist-video-renderer'
   ];
+  // Channel entity containers — the channel itself, not a video.
+  // These appear at the top of search results, in channel grids, and in
+  // "related channels" sidebars.
+  const CHANNEL_CARD_SELECTORS = [
+    'ytd-channel-renderer',        // search results top shelf
+    'ytd-grid-channel-renderer',   // channel grid tiles
+    'ytd-mini-channel-renderer'    // compact list entries
+  ];
+  const CARD_SELECTORS = [...VIDEO_CARD_SELECTORS, ...CHANNEL_CARD_SELECTORS];
   const CARD_SELECTOR_LIST = CARD_SELECTORS.join(',');
+  const CHANNEL_CARD_SELECTOR_SET = new Set(CHANNEL_CARD_SELECTORS);
   const PROCESSED_ATTR = 'data-pe-processed';
   const MATCH_ATTR = 'data-pe-match';
   const DEBOUNCE_MS = 200;
@@ -59,17 +70,36 @@
    * { channelId, channelName, anchor }. Either field may be null.
    */
   function readCardChannel(card) {
+    const isChannelCard = CHANNEL_CARD_SELECTOR_SET.has(card.tagName.toLowerCase());
+
     // Prefer a direct anchor with /channel/ in href (gives us the ID)
     const idAnchor = card.querySelector('a[href*="/channel/"]');
     let channelId = null;
     let anchor = idAnchor;
     if (idAnchor) channelId = extractChannelIdFromHref(idAnchor.getAttribute('href'));
 
-    // Name lookup — the spec's selector #channel-name yt-formatted-string
-    // works across all four card types. We also accept a text alternative.
-    let nameEl = card.querySelector('#channel-name yt-formatted-string, #channel-name a');
-    if (!nameEl) nameEl = card.querySelector('ytd-channel-name a, ytd-channel-name yt-formatted-string');
-    const channelName = nameEl ? nameEl.textContent.trim() : null;
+    // Name lookup. On video cards the channel is in a nested #channel-name
+    // element. On channel cards the channel's *own* title lives in
+    // #text.ytd-channel-name or #title within the renderer itself.
+    let channelName = null;
+    if (isChannelCard) {
+      // Channel-entity card: the whole card represents one channel, so
+      // read its title directly.
+      const titleEl = card.querySelector(
+        '#text.ytd-channel-name, ' +
+        '#title, ' +
+        'yt-formatted-string#title, ' +
+        'ytd-channel-name #text, ' +
+        '#channel-title'
+      );
+      if (titleEl) channelName = titleEl.textContent.trim();
+    }
+    if (!channelName) {
+      // Fallback / video-card path
+      let nameEl = card.querySelector('#channel-name yt-formatted-string, #channel-name a');
+      if (!nameEl) nameEl = card.querySelector('ytd-channel-name a, ytd-channel-name yt-formatted-string');
+      if (nameEl) channelName = nameEl.textContent.trim();
+    }
 
     // If we didn't get an ID from /channel/, try any channel-related anchor
     // (in case one is there with a UC id we missed on first pass).
@@ -173,6 +203,9 @@
       state.filteredOnPage = matched;
       broadcastCount();
     }
+    // Channel-page check runs on every scan because the relevant meta tags
+    // can populate after DOMContentLoaded, especially on SPA navigations.
+    checkChannelPage();
   }
 
   function reprocessAll() {
@@ -183,7 +216,145 @@
       if (card.hasAttribute(MATCH_ATTR)) clearMatch(card);
     }
     state.filteredOnPage = 0;
+    // Also re-check the channel-page overlay in case the user navigated
+    // to a different channel in the same session.
+    clearChannelPageOverlay();
     scan(true);
+    checkChannelPage();
+  }
+
+  // --- Channel page handling ---
+  //
+  // When the user navigates to a channel page directly (e.g. clicks "Fern"
+  // in a search result), we need to handle the channel *itself*, not just
+  // the video cards on it. The tab URL tells us we're on a channel page;
+  // the channel ID comes from either the URL (/channel/UCxxx...) or the
+  // page's canonical link (for /@handle, /c/, /user/ URLs).
+
+  function readCurrentChannelPage() {
+    const path = location.pathname;
+    // Quick URL test: is this a channel-page URL at all?
+    const isChannelUrl = /^\/(channel\/UC[\w-]{20,}|@[\w.\-]+|c\/[^/]+|user\/[^/]+)\/?/.test(path);
+    if (!isChannelUrl) return null;
+
+    // Try to get the ID from the URL directly.
+    let channelId = null;
+    const m = path.match(/^\/channel\/(UC[\w-]{20,})/);
+    if (m) channelId = m[1];
+
+    // Otherwise read the canonical link YouTube injects into the page head.
+    if (!channelId) {
+      const canonical = document.querySelector('link[rel="canonical"]');
+      if (canonical) {
+        const cm = (canonical.href || '').match(/\/channel\/(UC[\w-]{20,})/);
+        if (cm) channelId = cm[1];
+      }
+    }
+    // Also check <meta itemprop="identifier"> / <meta itemprop="channelId">.
+    if (!channelId) {
+      const meta = document.querySelector('meta[itemprop="identifier"], meta[itemprop="channelId"]');
+      if (meta && /^UC[\w-]{20,}$/.test(meta.content || '')) channelId = meta.content;
+    }
+
+    // Channel name — og:title is the cleanest source.
+    let channelName = null;
+    const og = document.querySelector('meta[property="og:title"]');
+    if (og && og.content) channelName = og.content.trim();
+    if (!channelName) {
+      // Fallback to the rendered header.
+      const header = document.querySelector('#channel-name #text, ytd-channel-name #text');
+      if (header) channelName = header.textContent.trim();
+    }
+
+    return { channelId, channelName };
+  }
+
+  function clearChannelPageOverlay() {
+    const existing = document.getElementById('pe-channel-page-overlay');
+    if (existing) existing.remove();
+    // Also un-hide any content we hid.
+    for (const el of document.querySelectorAll('[data-pe-page-hidden="true"]')) {
+      el.style.display = '';
+      el.removeAttribute('data-pe-page-hidden');
+    }
+  }
+
+  function buildChannelPageOverlay(entry, mode) {
+    const overlay = document.createElement('div');
+    overlay.id = 'pe-channel-page-overlay';
+    overlay.className = 'pe-channel-page-overlay';
+    overlay.innerHTML = `
+      <div class="pe-channel-page-panel">
+        <div class="pe-channel-page-badge">Filtered channel</div>
+        <h2>This channel is flagged</h2>
+        <p><strong>${escapeHtml(entry.channelName || 'Unknown')}</strong> is listed as owned by
+        <strong>${escapeHtml(entry.owner)}</strong>${entry.ownershipType && entry.ownershipType !== 'unknown' ? ` (${escapeHtml(entry.ownershipType)} ownership)` : ''}.</p>
+        <div class="pe-channel-page-actions">
+          <button id="pe-page-back" type="button">Go back</button>
+          <button id="pe-page-show" type="button">Show anyway</button>
+        </div>
+        ${entry.source ? `<p class="pe-channel-page-source"><a href="${escapeAttr(entry.source)}" target="_blank" rel="noopener">Source</a></p>` : ''}
+      </div>
+    `;
+    overlay.querySelector('#pe-page-back').addEventListener('click', () => {
+      if (history.length > 1) history.back();
+      else location.href = 'https://www.youtube.com/';
+    });
+    overlay.querySelector('#pe-page-show').addEventListener('click', () => {
+      overlay.remove();
+    });
+    return overlay;
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+  }
+  function escapeAttr(s) { return escapeHtml(s); }
+
+  let lastHandledChannelUrl = null;
+  function checkChannelPage() {
+    if (state.mode === 'off') { clearChannelPageOverlay(); return; }
+
+    const info = readCurrentChannelPage();
+    // URL changed or we're no longer on a channel page — drop any old overlay.
+    if (!info) {
+      clearChannelPageOverlay();
+      lastHandledChannelUrl = null;
+      return;
+    }
+
+    const entry = findMatch(info.channelId, info.channelName);
+    if (!entry) {
+      clearChannelPageOverlay();
+      lastHandledChannelUrl = location.href;
+      return;
+    }
+
+    // Already handled this exact URL in hide-mode? Don't re-add overlay.
+    const fingerprint = `${location.href}|${state.mode}`;
+    if (lastHandledChannelUrl === fingerprint && document.getElementById('pe-channel-page-overlay')) return;
+    lastHandledChannelUrl = fingerprint;
+
+    if (state.mode === 'hide') {
+      // Full-page overlay covering the channel page.
+      clearChannelPageOverlay();
+      const overlay = buildChannelPageOverlay(entry, state.mode);
+      document.body.appendChild(overlay);
+    } else if (state.mode === 'label') {
+      // Inline banner above the channel content. We add it as a sticky
+      // banner at the top of the main content area.
+      clearChannelPageOverlay();
+      const banner = document.createElement('div');
+      banner.id = 'pe-channel-page-overlay';
+      banner.className = 'pe-channel-page-banner';
+      banner.innerHTML = `
+        <span class="pe-filter-badge" style="position:static; display:inline-block;">Owned by ${escapeHtml(entry.owner)}</span>
+        <span class="pe-channel-page-banner-text">This channel is flagged as owned by <strong>${escapeHtml(entry.owner)}</strong>${entry.ownershipType && entry.ownershipType !== 'unknown' ? ` (${escapeHtml(entry.ownershipType)})` : ''}.</span>
+      `;
+      // Inject at the top of ytd-page-manager so it sits above the channel header.
+      const host = document.querySelector('ytd-page-manager') || document.body;
+      host.insertBefore(banner, host.firstChild);
+    }
   }
 
   function broadcastCount() {
