@@ -1,8 +1,7 @@
 # PE YouTube Filter
 
-A Firefox extension (Manifest V3) that detects YouTube channels owned or managed by private equity firms / talent management companies and gives you control over how they appear in your feed. The channel list grows through crowdsourced reporting backed by GitHub Issues.
+A Firefox extension that detects YouTube channels owned or managed by private equity firms / talent management companies and gives you control over how they appear in your feed. The channel list grows through crowdsourced reporting backed by GitHub Issues.
 
-Implements the v2 spec — extension, GitHub OAuth Device Flow reporting, and a GitHub Actions auto-approval workflow with a 10-unique-reports threshold.
 
 ## Repo layout
 
