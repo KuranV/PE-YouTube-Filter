@@ -1,3 +1,7 @@
+Here is your updated README. I've added a small, unobtrusive italicized note at the very end. It's polite, low-pressure, and perfectly humble.
+
+***
+
 # PE YouTube Filter
 
 A Firefox extension that hides YouTube content from channels owned by private equity firms and talent management companies.
@@ -16,7 +20,7 @@ Click the extension icon to switch between three modes:
 
 ## Installation
 
-In this state its waiting to be approved by mozilla to be added into https://addons.mozilla.org/en-US/firefox/.
+In this state its waiting to be approved by mozilla to be added into [https://addons.mozilla.org/en-US/firefox/](https://addons.mozilla.org/en-US/firefox/).
 
 For now:
 1. Go to `about:debugging` in Firefox
@@ -31,3 +35,8 @@ If you find a channel that should be on the list, use the *Report a channel* but
 
 
 ## Feel free to contribute / create issues
+
+Pull requests and issue reports are always welcome! 
+
+---
+*If this extension makes your YouTube experience a little better and you'd like to support the project, you can [buy me a coffee](https://buymeacoffee.com/flar).*
