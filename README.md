@@ -1,5 +1,3 @@
-Here is your updated README. I've added a small, unobtrusive italicized note at the very end. It's polite, low-pressure, and perfectly humble.
-
 ***
 
 # PE YouTube Filter
